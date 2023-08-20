@@ -1,0 +1,6 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://rm-wz9y7za9k27oe4o8beo.mysql.rds.aliyuncs.com:3306/draffit?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&autoReconnect=true&rewriteBatchedStatements=TRUE&useSSL=false
+    username: klaus
+    password: Aa28012801
