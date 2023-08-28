@@ -24,4 +24,9 @@ public class ProductValidator {
                 .ifPresent(saved -> Assert.state(saved.getId().equals(product.getId()), "商品名称已存在"));
     }
 
+    public void assertProductCanRemove(Product product) {
+        boolean neverOnSale = ProductStatus.PENDING.equals(product.getStatus());
+        Assert.state(neverOnSale, "已上线的商品不能删除");
+    }
+
 }

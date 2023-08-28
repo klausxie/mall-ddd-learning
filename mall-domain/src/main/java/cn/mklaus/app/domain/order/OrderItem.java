@@ -10,6 +10,7 @@ import lombok.Data;
 public class OrderItem {
 
     private Long productId;
+    private Long productPrice;
     private String productName;
     private String productDescription;
     private String productCover;

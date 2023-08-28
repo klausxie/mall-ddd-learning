@@ -7,8 +7,8 @@ package cn.mklaus.app.domain.finance;
 public enum PaymentStatus {
 
     /**
-     * 待支付，已取消，已付款，已退款
+     * 待处理，待支付(已获取到第三方支付所需配置信息), 已取消，已付款，已退款
      */
-    PENDING, CANCELLED, PAID, REFUNDED
+    PENDING, PREPARE, CANCELLED, PAID, REFUNDED
 
 }

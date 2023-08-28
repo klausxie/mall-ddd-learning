@@ -26,9 +26,23 @@ public class Product {
         this.price = price;
     }
 
-    private void updateInventory(int inventory) {
+    public void updateInventory(int inventory) {
         Assert.state(inventory >= 0, "库存不能小于0");
         this.inventory = inventory;
+    }
+
+    public void becomeOnSale() {
+        boolean onSale = ProductStatus.ON_SALE.equals(status);
+        Assert.state(!onSale, "商品已上线");
+        Assert.state(price > 0, "价格不能小于等于0");
+        Assert.state(inventory >= 0, "库存不能小于0");
+        status = ProductStatus.ON_SALE;
+    }
+
+    public void becomeOffSale() {
+        boolean onSale = ProductStatus.ON_SALE.equals(status);
+        Assert.state(onSale, "只有上线状态商品才可以下线");
+        status = ProductStatus.PENDING;
     }
 
 }

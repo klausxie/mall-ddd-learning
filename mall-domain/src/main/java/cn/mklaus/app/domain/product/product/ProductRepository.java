@@ -14,6 +14,12 @@ public interface ProductRepository {
 
     Optional<Product> getProductByName(String name);
 
+    void saveProduct(Product product);
+
+    void updateProduct(Product product);
+
+    void removeProduct(Product product);
+
     void saveComment(Comment comment);
 
 }
