@@ -2,8 +2,8 @@ package cn.mklaus.app.application.user.command;
 
 import cn.mklaus.app.application.user.command.request.AddressCreateRequest;
 import cn.mklaus.app.application.user.command.request.UserCreateRequest;
-import cn.mklaus.app.application.user.model.AddressDTO;
-import cn.mklaus.app.application.user.model.UserDTO;
+import cn.mklaus.app.repostiory.user.query.model.AddressDTO;
+import cn.mklaus.app.repostiory.user.query.model.UserDTO;
 import cn.mklaus.app.domain.user.Address;
 import cn.mklaus.app.domain.user.User;
 import cn.mklaus.app.domain.user.UserValidator;

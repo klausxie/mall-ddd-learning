@@ -1,7 +1,7 @@
 package cn.mklaus.app.application.order.command;
 
 import cn.mklaus.app.application.order.command.request.OrderCreateRequest;
-import cn.mklaus.app.application.order.model.OrderDTO;
+import cn.mklaus.app.repostiory.order.query.model.OrderDTO;
 import cn.mklaus.app.domain.order.Order;
 import cn.mklaus.app.domain.order.OrderItem;
 import cn.mklaus.app.domain.order.OrderNoGenerator;

@@ -1,5 +1,6 @@
 package cn.mklaus.app.application.product.command;
 
+import cn.mklaus.app.application.product.command.assembler.CategoryAssembler;
 import cn.mklaus.app.application.product.command.request.CategoryCreateRequest;
 import cn.mklaus.app.application.product.command.request.CategoryRemoveRequest;
 import cn.mklaus.app.application.product.command.request.CategoryUpdateRequest;

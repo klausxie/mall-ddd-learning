@@ -1,8 +1,8 @@
 package cn.mklaus.app.application.product.command;
 
+import cn.mklaus.app.application.product.command.assembler.ProductAssembler;
 import cn.mklaus.app.application.product.command.request.*;
 import cn.mklaus.app.application.product.model.ProductDTO;
-import cn.mklaus.app.application.product.query.request.ProductPageRequest;
 import cn.mklaus.app.domain.product.category.CategoryValidator;
 import cn.mklaus.app.domain.product.product.Product;
 import cn.mklaus.app.domain.product.product.ProductRepository;

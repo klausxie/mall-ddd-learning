@@ -1,7 +1,7 @@
 package cn.mklaus.app.application.order.command;
 
 import cn.mklaus.app.application.order.command.request.OrderCreateRequest;
-import cn.mklaus.app.application.order.model.OrderDTO;
+import cn.mklaus.app.repostiory.order.query.model.OrderDTO;
 import cn.mklaus.app.common.auth.Context;
 import cn.mklaus.app.domain.common.EventPublisher;
 import cn.mklaus.app.domain.finance.Payment;

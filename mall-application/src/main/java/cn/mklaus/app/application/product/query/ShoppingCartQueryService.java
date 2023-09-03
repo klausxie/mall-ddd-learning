@@ -1,7 +1,7 @@
 package cn.mklaus.app.application.product.query;
 
-import cn.mklaus.app.application.product.query.repository.ShoppingCartQuery;
-import cn.mklaus.app.application.product.query.repository.model.ShoppingCartItem;
+import cn.mklaus.app.repostiory.product.query.ShoppingCartQuery;
+import cn.mklaus.app.repostiory.product.query.model.ShoppingCartItem;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 

@@ -1,11 +1,13 @@
 package cn.mklaus.app.application.user.query;
 
-import cn.mklaus.app.application.user.model.AddressDTO;
-import cn.mklaus.app.application.user.model.UserDTO;
+import cn.mklaus.app.repostiory.user.query.model.AddressDTO;
+import cn.mklaus.app.repostiory.user.query.model.UserDTO;
 import cn.mklaus.app.application.user.query.request.AddressPageRequest;
 import cn.mklaus.app.common.auth.Context;
 import cn.mklaus.app.common.auth.Operator;
 import cn.mklaus.app.common.model.Page;
+import cn.mklaus.app.repostiory.user.query.AddressQuery;
+import cn.mklaus.app.repostiory.user.query.UserQuery;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
