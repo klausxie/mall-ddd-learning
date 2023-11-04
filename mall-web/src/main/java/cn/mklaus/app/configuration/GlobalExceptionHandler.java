@@ -3,6 +3,8 @@ package cn.mklaus.app.configuration;
 import cn.mklaus.app.common.exception.ErrorCodeException;
 import cn.mklaus.app.common.exception.MallException;
 import cn.mklaus.app.common.model.Response;
+import cn.mklaus.app.domain.common.I18nMessageProvider;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -12,10 +14,11 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  * @since 2023/11/4
  */
 @Slf4j
+@AllArgsConstructor
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // private final I18nMessageProvider i18nMessageProvider;
+    private final I18nMessageProvider i18nMessageProvider;
 
     @ExceptionHandler(MallException.class)
     public Response<Void> handleMallException(MallException e) {
@@ -26,8 +29,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ErrorCodeException.class)
     public Response<Void> handleErrorCodeException(ErrorCodeException e) {
         log.warn("ErrorCode exception catch: 【{}】-> {}", e.getErrorCode().getCode(), e.getMessage());
-        // 国际化处理 String message = i18nMessageProvider.getMessage(e.getErrorCode(), e.getArgs());
-        return Response.error(e.getErrorCode().getCode(), e.getMessage());
+        String message = i18nMessageProvider.buildMessage(e.getErrorCode().toString(), e.getArgs());
+        return Response.error(e.getErrorCode().getCode(), message);
     }
 
 }
