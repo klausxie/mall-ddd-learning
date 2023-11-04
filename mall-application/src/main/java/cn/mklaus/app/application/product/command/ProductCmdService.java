@@ -2,11 +2,10 @@ package cn.mklaus.app.application.product.command;
 
 import cn.mklaus.app.application.product.command.assembler.ProductAssembler;
 import cn.mklaus.app.application.product.command.request.*;
-import cn.mklaus.app.application.product.model.ProductDTO;
-import cn.mklaus.app.domain.product.category.CategoryValidator;
 import cn.mklaus.app.domain.product.product.Product;
 import cn.mklaus.app.domain.product.product.ProductRepository;
-import cn.mklaus.app.domain.product.product.ProductValidator;
+import cn.mklaus.app.domain.product.product.ProductService;
+import cn.mklaus.app.repostiory.product.query.model.ProductDTO;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,50 +18,32 @@ import org.springframework.stereotype.Service;
 public class ProductCmdService {
 
     private final ProductAssembler productAssembler;
-    private final ProductValidator productValidator;
-    private final CategoryValidator categoryValidator;
     private final ProductRepository productRepository;
-
-    public Product ensureGetProduct(long productId) {
-        return productRepository.getProduct(productId)
-                .orElseThrow(() -> new RuntimeException("商品不存在"));
-    }
+    private final ProductService productService;
 
     public ProductDTO createProduct(ProductCreateRequest req) {
         Product product = productAssembler.buildProduct(req);
-        productRepository.saveProduct(product);
+        productService.saveProduct(product);
         return productAssembler.toProductDTO(product);
     }
 
     public void updateProduct(ProductUpdateRequest req) {
-        Product product = ensureGetProduct(req.getProductId());
-        if (!product.getCategoryId().equals(req.getCategoryId())) {
-            categoryValidator.assertCategoryExists(req.getCategoryId());
-            product.setCategoryId(req.getCategoryId());
-        }
-
-        product.setName(req.getName());
-        product.setDescription(req.getDescription());
-        product.setContent(req.getContent());
-        product.setCover(req.getCover());
-        productValidator.assertProductNameCanUse(product);
-        productRepository.updateProduct(product);
+        Product product = productAssembler.buildProduct(req);
+        productService.updateProductInfo(product);
     }
 
     public void removeProduct(ProductRemoveRequest req) {
-        Product product = ensureGetProduct(req.getProductId());
-        productValidator.assertProductCanRemove(product);
-        productRepository.removeProduct(product);
+        productService.removeProduct(req.getProductId());
     }
 
     public void onSaleProduct(ProductOnSaleRequest req) {
-        Product product = ensureGetProduct(req.getProductId());
+        Product product = productService.ensureGetProduct(req.getProductId());
         product.becomeOnSale();
         productRepository.updateProduct(product);
     }
 
     public void offSaleProduct(ProductOffSaleRequest req) {
-        Product product = ensureGetProduct(req.getProductId());
+        Product product = productService.ensureGetProduct(req.getProductId());
         product.becomeOffSale();
         productRepository.updateProduct(product);
     }

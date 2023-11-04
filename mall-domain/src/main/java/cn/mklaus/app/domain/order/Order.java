@@ -34,9 +34,10 @@ public class Order {
     }
 
     public long calculateAmount() {
-        return items.stream()
-                .mapToLong(item -> item.getProductPrice() * item.getCount())
-                .sum();
+        return 0L;
+//        return items.stream()
+//                .mapToLong(item -> item.getPrice() * item.getCount())
+//                .sum();
     }
 
 }

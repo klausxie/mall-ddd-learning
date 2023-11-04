@@ -46,10 +46,10 @@ public class OrderAssembler {
 
         OrderItem orderItem = new OrderItem();
         orderItem.setProductId(product.getId());
-        orderItem.setProductPrice(product.getPrice());
-        orderItem.setProductName(product.getName());
-        orderItem.setProductDescription(product.getDescription());
-        orderItem.setProductCover(product.getCover());
+        orderItem.setPrice(product.getPrice());
+        orderItem.setName(product.getName());
+        orderItem.setDescription(product.getDescription());
+        orderItem.setCover(product.getCover());
         orderItem.setCount(item.getCount());
         return orderItem;
     }

@@ -1,5 +1,6 @@
 package cn.mklaus.app.domain.product.product;
 
+import cn.mklaus.app.common.exception.Asserts;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
@@ -15,13 +16,17 @@ public class ProductValidator {
     private final ProductRepository productRepository;
 
     public void assertProductExists(long productId) {
-        Assert.state(productRepository.getProduct(productId).isPresent(), "商品不存在");
+        boolean present = productRepository.getProduct(productId).isPresent();
+        Asserts.state(present, ProductErrorCode.PRODUCT_NOT_EXISTS);
     }
 
     public void assertProductNameCanUse(Product product) {
         Assert.hasText(product.getName(), "商品名称不能为空");
         productRepository.getProductByName(product.getName())
-                .ifPresent(saved -> Assert.state(saved.getId().equals(product.getId()), "商品名称已存在"));
+                .ifPresent(saved -> {
+                    boolean sameProduct = saved.getId().equals(product.getId());
+                    Asserts.state(sameProduct, ProductErrorCode.PRODUCT_NAME_ALREADY_EXISTS);
+                });
     }
 
     public void assertProductCanRemove(Product product) {

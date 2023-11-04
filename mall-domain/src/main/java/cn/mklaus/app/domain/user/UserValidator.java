@@ -14,8 +14,8 @@ import java.util.regex.Pattern;
 @AllArgsConstructor
 public class UserValidator {
 
-    private final Pattern MOBILE_PATTERN = Pattern.compile("1[3-9]\\d{9}");
-    private final Pattern PASSWORD_PATTERN = Pattern.compile("1[3-9]\\d{9}");
+    private final static Pattern MOBILE_PATTERN = Pattern.compile("1[3-9]\\d{9}");
+    private final static Pattern PASSWORD_PATTERN = Pattern.compile("1[3-9]\\d{9}");
 
     private final UserRepository userRepository;
 

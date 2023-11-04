@@ -7,7 +7,7 @@ package cn.mklaus.app.common.auth;
 public class Context {
 
     public static Operator currentOperator() {
-        return new Operator(1L);
+        return new Operator();
     }
 
 }

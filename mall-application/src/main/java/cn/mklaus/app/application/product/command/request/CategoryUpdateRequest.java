@@ -9,7 +9,7 @@ import lombok.Data;
 @Data
 public class CategoryUpdateRequest {
 
-    private Integer categoryId;
+    private Long categoryId;
     private String name;
     private String description;
 

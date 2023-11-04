@@ -1,6 +1,5 @@
 package cn.mklaus.app.repostiory.product.query.model;
 
-import cn.mklaus.app.application.product.model.ProductDTO;
 import lombok.Data;
 
 /**

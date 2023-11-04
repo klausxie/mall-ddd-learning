@@ -2,9 +2,8 @@ package cn.mklaus.app.application.product.command.assembler;
 
 import cn.mklaus.app.application.product.command.request.CategoryCreateRequest;
 import cn.mklaus.app.application.product.command.request.CategoryUpdateRequest;
-import cn.mklaus.app.application.product.model.CategoryDTO;
 import cn.mklaus.app.domain.product.category.Category;
-import cn.mklaus.app.domain.product.category.CategoryValidator;
+import cn.mklaus.app.repostiory.product.query.model.CategoryDTO;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
@@ -17,21 +16,19 @@ import org.springframework.stereotype.Component;
 @AllArgsConstructor
 public class CategoryAssembler {
 
-    private final CategoryValidator categoryValidator;
 
     public Category buildCategory(CategoryCreateRequest req) {
         Category category = new Category();
         category.setName(req.getName());
         category.setDescription(req.getDescription());
-        categoryValidator.assertCategoryNameCanUse(category);
         return category;
     }
 
     public Category buildCategory(CategoryUpdateRequest req) {
         Category category = new Category();
+        category.setId(req.getCategoryId());
         category.setName(req.getName());
         category.setDescription(req.getDescription());
-        categoryValidator.assertCategoryNameCanUse(category);
         return category;
     }
 

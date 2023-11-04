@@ -4,6 +4,8 @@ import cn.mklaus.app.application.user.command.request.AddressCreateRequest;
 import cn.mklaus.app.application.user.command.request.AddressRemoveRequest;
 import cn.mklaus.app.application.user.command.request.AddressUpdateRequest;
 import cn.mklaus.app.application.user.command.request.UserCreateRequest;
+import cn.mklaus.app.repostiory.user.convertor.AddressConvertor;
+import cn.mklaus.app.repostiory.user.convertor.UserConvertor;
 import cn.mklaus.app.repostiory.user.query.model.AddressDTO;
 import cn.mklaus.app.repostiory.user.query.model.UserDTO;
 import cn.mklaus.app.common.auth.Context;
@@ -36,14 +38,14 @@ public class UserCmdService {
 
         User user = userAssembler.buildUser(req);
         userRepository.saveUser(user);
-        return userAssembler.toUserDTO(user);
+        return UserConvertor.INSTANCE.toUserDTO(user);
     }
 
     public AddressDTO createAddress(AddressCreateRequest req) {
         Address address = userAssembler.buildAddress(req);
         address.setUserId(Context.currentOperator().getId());
         addressRepository.saveAddress(address);
-        return userAssembler.toAddressDTO(address);
+        return AddressConvertor.INSTANCE.toAddressDTO(address);
     }
 
     public void updateAddress(AddressUpdateRequest req) {
