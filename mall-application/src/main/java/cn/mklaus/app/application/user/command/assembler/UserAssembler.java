@@ -1,4 +1,4 @@
-package cn.mklaus.app.application.user.command;
+package cn.mklaus.app.application.user.command.assembler;
 
 import cn.mklaus.app.application.user.command.request.AddressCreateRequest;
 import cn.mklaus.app.application.user.command.request.UserCreateRequest;

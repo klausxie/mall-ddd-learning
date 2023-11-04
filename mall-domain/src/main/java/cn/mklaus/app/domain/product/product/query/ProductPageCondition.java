@@ -1,4 +1,4 @@
-package cn.mklaus.app.repostiory.product.query.condition;
+package cn.mklaus.app.domain.product.product.query;
 
 import cn.mklaus.app.domain.product.product.ProductStatus;
 import lombok.Builder;

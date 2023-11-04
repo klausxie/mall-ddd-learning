@@ -2,7 +2,7 @@ package cn.mklaus.app.application.product.query.request;
 
 import cn.mklaus.app.common.model.Pageable;
 import cn.mklaus.app.domain.product.product.ProductStatus;
-import cn.mklaus.app.repostiory.product.query.condition.ProductPageCondition;
+import cn.mklaus.app.domain.product.product.query.ProductPageCondition;
 import lombok.Data;
 
 /**

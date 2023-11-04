@@ -1,5 +1,8 @@
 package cn.mklaus.app.domain.product.product;
 
+import cn.mklaus.app.common.model.Page;
+import cn.mklaus.app.domain.product.product.query.ProductPageCondition;
+
 import java.util.Optional;
 
 /**
@@ -20,6 +23,6 @@ public interface ProductRepository {
 
     void removeProduct(Product product);
 
-    void saveComment(Comment comment);
+    Page<Product> pageProduct(ProductPageCondition cnd);
 
 }
