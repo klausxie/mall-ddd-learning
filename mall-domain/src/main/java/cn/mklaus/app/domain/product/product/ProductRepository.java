@@ -11,8 +11,6 @@ import java.util.Optional;
  */
 public interface ProductRepository {
 
-    boolean existsProductOfCategory(long categoryId);
-
     Optional<Product> getProduct(long prodcutId);
 
     Optional<Product> getProductByName(String name);

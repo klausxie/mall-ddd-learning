@@ -7,7 +7,7 @@ import lombok.Data;
  * @since 2023/8/25
  */
 @Data
-public class ShoppingCartItem {
+public class ShoppingCartItemInfo {
 
     private String productId;
     private String productName;

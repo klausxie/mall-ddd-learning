@@ -12,7 +12,6 @@ import lombok.Data;
 @Builder
 public class ProductPageCondition {
     private String keyword;
-    private Integer categoryId;
     private ProductStatus status;
     private Integer offset;
     private Integer size;

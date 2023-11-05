@@ -13,13 +13,11 @@ import lombok.Data;
 public class ProductPageRequest extends Pageable {
 
     private String keyword;
-    private Integer categoryId;
     private ProductStatus status;
 
     public ProductPageCondition buildCondition() {
         return ProductPageCondition.builder()
                 .keyword(keyword)
-                .categoryId(categoryId)
                 .status(status)
                 .offset(getOffset())
                 .size(getPageSize())

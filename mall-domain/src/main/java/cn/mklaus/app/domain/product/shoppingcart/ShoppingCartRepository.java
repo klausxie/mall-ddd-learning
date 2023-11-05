@@ -1,6 +1,6 @@
 package cn.mklaus.app.domain.product.shoppingcart;
 
-import cn.mklaus.app.domain.product.shoppingcart.query.model.ShoppingCartItem;
+import cn.mklaus.app.domain.product.shoppingcart.query.model.ShoppingCartItemInfo;
 
 import java.util.List;
 
@@ -14,6 +14,6 @@ public interface ShoppingCartRepository {
 
     void removeShoppingCart(ShoppingCart shoppingCart);
 
-    List<ShoppingCartItem> listShoppingCart(long userId);
+    List<ShoppingCartItemInfo> listShoppingCart(long userId);
 
 }

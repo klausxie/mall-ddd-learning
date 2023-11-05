@@ -10,7 +10,6 @@ import lombok.Data;
 public class ProductUpdateRequest {
 
     private Long productId;
-    private Long categoryId;
     private String name;
     private String description;
     private String content;

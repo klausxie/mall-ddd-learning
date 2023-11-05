@@ -1,6 +1,5 @@
 package cn.mklaus.app.domain.product.product;
 
-import cn.mklaus.app.domain.product.category.CategoryValidator;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -14,7 +13,6 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final ProductValidator productValidator;
-    private final CategoryValidator categoryValidator;
 
     public Product ensureGetProduct(long productId) {
         return productRepository.getProduct(productId)
@@ -24,7 +22,6 @@ public class ProductService {
     public void saveProduct(Product product) {
         product.setStatus(ProductStatus.PENDING);
         product.validate();
-        categoryValidator.assertCategoryExists(product.getCategoryId());
         productValidator.assertProductNameCanUse(product);
         productRepository.saveProduct(product);
     }
@@ -36,12 +33,7 @@ public class ProductService {
             productValidator.assertProductNameCanUse(product);
         }
 
-        if (!saved.getCategoryId().equals(product.getCategoryId())) {
-            categoryValidator.assertCategoryExists(product.getCategoryId());
-        }
-
         saved.setName(product.getName());
-        saved.setCategoryId(product.getCategoryId());
         saved.setDescription(product.getDescription());
         saved.setContent(product.getContent());
         saved.setCover(product.getCover());

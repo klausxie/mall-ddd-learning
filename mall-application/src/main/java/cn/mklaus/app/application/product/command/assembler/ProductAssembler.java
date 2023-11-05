@@ -16,7 +16,6 @@ public class ProductAssembler {
 
     public Product buildProduct(ProductCreateRequest req) {
         Product product = new Product();
-        product.setCategoryId(req.getCategoryId());
         product.setName(req.getName());
         product.setDescription(req.getDescription());
         product.setContent(req.getContent());
@@ -29,7 +28,6 @@ public class ProductAssembler {
     public Product buildProduct(ProductUpdateRequest req) {
         Product product = new Product();
         product.setId(req.getProductId());
-        product.setCategoryId(req.getCategoryId());
         product.setName(req.getName());
         product.setDescription(req.getDescription());
         product.setContent(req.getContent());

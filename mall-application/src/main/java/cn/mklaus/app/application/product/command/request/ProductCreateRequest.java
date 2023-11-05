@@ -1,6 +1,5 @@
 package cn.mklaus.app.application.product.command.request;
 
-import cn.mklaus.app.domain.product.product.ProductStatus;
 import lombok.Data;
 
 /**
@@ -10,7 +9,6 @@ import lombok.Data;
 @Data
 public class ProductCreateRequest {
 
-    private Long categoryId;
     private String name;
     private String description;
     private String content;

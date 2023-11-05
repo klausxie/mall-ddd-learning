@@ -11,7 +11,6 @@ import org.springframework.util.Assert;
 public class Product {
 
     private Long id;
-    private Long categoryId;
     private ProductStatus status;
     private String name;
     private String description;
