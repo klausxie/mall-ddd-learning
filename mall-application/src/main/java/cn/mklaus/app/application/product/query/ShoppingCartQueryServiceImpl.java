@@ -1,7 +1,7 @@
 package cn.mklaus.app.application.product.query;
 
-import cn.mklaus.app.repostiory.product.query.ShoppingCartQuery;
-import cn.mklaus.app.repostiory.product.query.model.ShoppingCartItem;
+import cn.mklaus.app.domain.product.shoppingcart.ShoppingCartRepository;
+import cn.mklaus.app.domain.product.shoppingcart.query.model.ShoppingCartItem;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -15,10 +15,10 @@ import java.util.List;
 @AllArgsConstructor
 public class ShoppingCartQueryServiceImpl implements ShoppingCartQueryService {
 
-    private final ShoppingCartQuery shoppingCartQuery;
+    private final ShoppingCartRepository shoppingCartRepository;
 
     public List<ShoppingCartItem> listShoppingCart(long userId) {
-        return shoppingCartQuery.listShoppingCart(userId);
+        return shoppingCartRepository.listShoppingCart(userId);
     }
 
 }

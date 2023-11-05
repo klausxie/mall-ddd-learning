@@ -5,7 +5,6 @@ import cn.mklaus.app.application.product.command.request.*;
 import cn.mklaus.app.domain.product.product.Product;
 import cn.mklaus.app.domain.product.product.ProductRepository;
 import cn.mklaus.app.domain.product.product.ProductService;
-import cn.mklaus.app.repostiory.product.query.model.ProductDTO;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -22,10 +21,10 @@ public class ProductCmdServiceImpl implements ProductCmdService {
     private final ProductService productService;
 
     @Override
-    public ProductDTO createProduct(ProductCreateRequest req) {
+    public Product createProduct(ProductCreateRequest req) {
         Product product = productAssembler.buildProduct(req);
         productService.saveProduct(product);
-        return productAssembler.toProductDTO(product);
+        return product;
     }
 
     @Override

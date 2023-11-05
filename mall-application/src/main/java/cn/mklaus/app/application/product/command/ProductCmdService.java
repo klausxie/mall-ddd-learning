@@ -1,7 +1,7 @@
 package cn.mklaus.app.application.product.command;
 
 import cn.mklaus.app.application.product.command.request.*;
-import cn.mklaus.app.repostiory.product.query.model.ProductDTO;
+import cn.mklaus.app.domain.product.product.Product;
 
 /**
  * @author klausxie
@@ -9,7 +9,7 @@ import cn.mklaus.app.repostiory.product.query.model.ProductDTO;
  */
 public interface ProductCmdService {
 
-    ProductDTO createProduct(ProductCreateRequest req);
+    Product createProduct(ProductCreateRequest req);
 
     void updateProduct(ProductUpdateRequest req);
 

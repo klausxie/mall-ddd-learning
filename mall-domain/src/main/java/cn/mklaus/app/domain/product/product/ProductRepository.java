@@ -1,7 +1,7 @@
 package cn.mklaus.app.domain.product.product;
 
 import cn.mklaus.app.common.model.Page;
-import cn.mklaus.app.domain.product.product.query.ProductPageCondition;
+import cn.mklaus.app.domain.product.product.query.condition.ProductPageCondition;
 
 import java.util.Optional;
 

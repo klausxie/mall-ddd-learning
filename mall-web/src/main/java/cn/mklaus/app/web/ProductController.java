@@ -7,7 +7,7 @@ import cn.mklaus.app.application.product.command.request.ProductUpdateRequest;
 import cn.mklaus.app.application.product.query.ProductQueryService;
 import cn.mklaus.app.application.product.query.request.ProductPageRequest;
 import cn.mklaus.app.common.model.Page;
-import cn.mklaus.app.repostiory.product.query.model.ProductDTO;
+import cn.mklaus.app.domain.product.product.Product;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,7 +25,7 @@ public class ProductController {
     private final ProductCmdService productCmdService;
 
     @PostMapping("create")
-    public ProductDTO createProduct(@RequestBody ProductCreateRequest request) {
+    public Product createProduct(@RequestBody ProductCreateRequest request) {
         return productCmdService.createProduct(request);
     }
 
@@ -40,7 +40,7 @@ public class ProductController {
     }
 
     @GetMapping("page")
-    public Page<ProductDTO> pageProduct(ProductPageRequest request) {
+    public Page<Product> pageProduct(ProductPageRequest request) {
         return productQueryService.pageProduct(request);
     }
 

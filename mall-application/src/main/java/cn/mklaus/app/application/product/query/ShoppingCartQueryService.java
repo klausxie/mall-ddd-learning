@@ -1,6 +1,6 @@
 package cn.mklaus.app.application.product.query;
 
-import cn.mklaus.app.repostiory.product.query.model.ShoppingCartItem;
+import cn.mklaus.app.domain.product.shoppingcart.query.model.ShoppingCartItem;
 
 import java.util.List;
 

@@ -3,9 +3,7 @@ package cn.mklaus.app.application.product.command.assembler;
 import cn.mklaus.app.application.product.command.request.ProductCreateRequest;
 import cn.mklaus.app.application.product.command.request.ProductUpdateRequest;
 import cn.mklaus.app.domain.product.product.Product;
-import cn.mklaus.app.repostiory.product.query.model.ProductDTO;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
 /**
@@ -37,12 +35,6 @@ public class ProductAssembler {
         product.setContent(req.getContent());
         product.setCover(req.getCover());
         return product;
-    }
-
-    public ProductDTO toProductDTO(Product product) {
-        ProductDTO dto = new ProductDTO();
-        BeanUtils.copyProperties(product, dto);
-        return dto;
     }
 
 }

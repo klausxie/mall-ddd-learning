@@ -19,4 +19,6 @@ public interface AddressRepository {
 
     void removeAddress(Address address);
 
+    Page<Address> pageAddress(long userId, Pageable pageable);
+
 }
