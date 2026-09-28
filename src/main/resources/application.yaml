@@ -13,6 +13,8 @@ spring:
 
 mybatis-plus:
   mapper-locations: classpath*:/mapper/**/*.xml
+  # 值对象与数据库列之间的 TypeHandler 所在包（见 infrastructure/persistence）
+  type-handlers-package: cn.mklaus.app.infrastructure.persistence
 
 mall:
   captcha:

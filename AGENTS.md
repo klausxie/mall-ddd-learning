@@ -44,7 +44,7 @@ web ──► application ──► domain ──► common
 真库测试默认跳过（需要能连上 schema.sql 建好的库）：
 
 ```bash
-MALL_DB_PASSWORD='<密码>' ./mvnw test -Dtest='MapperSmokeTest,UserRegisterApiTest,AddressApiTest,ProductApiTest'
+MALL_DB_PASSWORD='<密码>' ./mvnw test -Dtest='MapperSmokeTest,UserRegisterApiTest,AddressApiTest'
 ```
 
 它们都带 `@Transactional`，跑完自动回滚，不会留数据。

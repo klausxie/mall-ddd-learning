@@ -1,6 +1,7 @@
 package cn.mklaus.app.web;
 
 import cn.mklaus.app.domain.common.PasswordHasher;
+import cn.mklaus.app.domain.user.Mobile;
 import cn.mklaus.app.domain.user.UserMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
@@ -63,7 +64,7 @@ class UserRegisterApiTest {
             .andExpect(jsonPath("$.data.user.password").doesNotExist())
             .andExpect(jsonPath("$.data.points").value(300));
 
-        String stored = userMapper.getUserByMobile(mobile).orElseThrow().getPassword();
+        String stored = userMapper.getUserByMobile(new Mobile(mobile)).orElseThrow().getPassword();
         assertTrue(stored.startsWith("pbkdf2$"), "库里存的应该是哈希，不是明文");
         assertTrue(passwordHasher.matches("Passw0rd!", stored), "哈希应能用原密码校验通过");
     }

@@ -39,7 +39,7 @@ export MALL_DB_USERNAME='klaus'    # 可选，默认 klaus
 
 - **HTTP 方法只允许 GET 和 POST。** 禁止 PUT / PATCH / DELETE。
   查询用 GET；新增、修改、删除一律用 POST，用路径上的动词区分。
-- **路径用 camelCase**，例如 `/product/create`、`/product/onSale`、`/product/page`。
+- **路径用 camelCase**，例如 `/user/create`、`/address/create`、`/address/page`。
   禁止 kebab-case、下划线、全小写拼接。
 - **分页参数固定为 `curPage` / `pageSize`**（`curPage` 从 1 开始，`pageSize` 默认 10）。
   禁止 `pageNumber` / `pageNum` / `currentPage` / `pageIndex` / `limit` / `offset` 作为对外参数名。

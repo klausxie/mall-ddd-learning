@@ -45,12 +45,6 @@ curl -s -X POST localhost:8080/user/create -H 'Content-Type: application/json' \
 curl -s -X POST localhost:8080/address/create -H 'X-Operator-Id: 1' -H 'Content-Type: application/json' \
   -d '{"recipient":"张三","phone":"13900000000","province":"广东省","city":"深圳市","district":"南山区","detail":"科技园 1 号"}'
 curl -s 'localhost:8080/address/page?curPage=1&pageSize=10' -H 'X-Operator-Id: 1'
-
-# 商品：新增 → 上架 → 分页
-curl -s -X POST localhost:8080/product/create -H 'Content-Type: application/json' \
-  -d '{"name":"示例商品","price":1999,"inventory":10}'
-curl -s -X POST localhost:8080/product/onSale -H 'Content-Type: application/json' -d '{"productId":1}'
-curl -s 'localhost:8080/product/page?curPage=1&pageSize=10&keyword=示例'
 ```
 
 ## 验证
@@ -72,7 +66,7 @@ MALL_DB_PASSWORD='<你的密码>' ./mvnw clean verify -Pcoverage-check -Dspring.
 | `ArchitectureTest` | 分层、依赖方向、命名、断言归属等 12 条架构规则 |
 | `MapperStatementsTest` | Mapper 接口方法与 XML statement 一一对应（不需要 DB） |
 | `ApplicationContextTest` | Bean 装配 + Mapper XML 解析（不需要 DB） |
-| 各 `*Test` 单测 | Spec / Policy / 密码哈希 / 分页 / 上下文 / 商品状态机 / 地址归属等 |
+| 各 `*Test` 单测 | Spec / Policy / 密码哈希 / 分页 / 上下文 / 地址归属等 |
 | `MapperSmokeTest`、`*ApiTest` | 真库 SQL 与 HTTP 端到端（`MALL_DB_PASSWORD` 打开） |
 
 ## 接口一览
@@ -83,8 +77,6 @@ MALL_DB_PASSWORD='<你的密码>' ./mvnw clean verify -Pcoverage-check -Dspring.
 | GET | `/user/get` | 当前用户 |
 | POST | `/address/create`、`/address/update`、`/address/remove` | 地址增删改 |
 | GET | `/address/page` | 地址分页 |
-| POST | `/product/create`、`/product/update`、`/product/remove`、`/product/onSale`、`/product/offSale` | 商品增删改与上下架 |
-| GET | `/product/page` | 商品分页（`keyword` / `status` 过滤） |
 
 约定：只用 GET/POST；路径 camelCase；分页参数固定 `curPage`（从 1 开始）/ `pageSize`（默认 10）；
 统一响应 `{code, message, data}`，`code=0` 为成功，失败靠业务错误码区分（HTTP 状态恒为 200）。

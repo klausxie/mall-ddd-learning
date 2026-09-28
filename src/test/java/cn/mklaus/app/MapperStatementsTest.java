@@ -1,6 +1,5 @@
 package cn.mklaus.app;
 
-import cn.mklaus.app.domain.product.ProductMapper;
 import cn.mklaus.app.domain.user.AddressMapper;
 import cn.mklaus.app.domain.user.UserMapper;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
@@ -30,7 +29,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class MapperStatementsTest {
 
-    private static final List<Class<?>> MAPPERS = List.of(UserMapper.class, AddressMapper.class, ProductMapper.class);
+    private static final List<Class<?>> MAPPERS = List.of(UserMapper.class, AddressMapper.class);
+
+    /**
+     * 与 application.yaml 里 mybatis-plus.type-handlers-package 保持一致。
+     */
+    private static final String TYPE_HANDLER_PACKAGE = "cn.mklaus.app.infrastructure.persistence";
 
     @Test
     void mapperMethodsAndXmlStatementsShouldMatchOneToOne() throws Exception {
@@ -65,6 +69,9 @@ class MapperStatementsTest {
 
     private static Configuration loadMapperXml() throws Exception {
         Configuration configuration = new Configuration();
+        // 与应用配置保持一致：application.yaml 的 mybatis-plus.type-handlers-package
+        // 若这里不注册，值对象（如 Mobile）会报 "No typehandler found for property"
+        configuration.getTypeHandlerRegistry().register(TYPE_HANDLER_PACKAGE);
         for (Class<?> mapper : MAPPERS) {
             configuration.addMapper(mapper);
 

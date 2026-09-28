@@ -10,7 +10,7 @@ import lombok.Data;
 public class User {
 
     private Long id;
-    private String mobile;
+    private Mobile mobile;
     private String password;
     private String nickname;
     private String avatar;

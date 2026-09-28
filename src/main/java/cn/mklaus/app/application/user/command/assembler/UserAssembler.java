@@ -4,6 +4,7 @@ import cn.mklaus.app.application.user.command.request.AddressCreateRequest;
 import cn.mklaus.app.application.user.command.request.UserCreateRequest;
 import cn.mklaus.app.domain.common.PasswordHasher;
 import cn.mklaus.app.domain.user.Address;
+import cn.mklaus.app.domain.user.Mobile;
 import cn.mklaus.app.domain.user.User;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -22,7 +23,7 @@ public class UserAssembler {
 
     public User buildUser(UserCreateRequest req) {
         User user = new User();
-        user.setMobile(req.getMobile());
+        user.setMobile(new Mobile(req.getMobile()));
         // 只存哈希，明文密码不落库也不进日志
         user.setPassword(passwordHasher.encode(req.getPassword()));
         user.setAge(req.getAge());

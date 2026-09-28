@@ -60,7 +60,7 @@ git clone <模板仓库> order-service && cd order-service
 |---|---|---|
 | **骨架（保留）** | `common/`（错误码 / Response / Page / Spec / Violation）、分层结构、12 条 ArchUnit 规则、Checkstyle + Spotless、CI（MySQL service + 覆盖率门槛）、compose + schema、四份文档 | 全部保留 |
 | **黄金切片（照抄）** | `user` 域：Controller → Cmd/QueryService → assembler → 实体/Validator/Spec/Policy → Mapper + XML → 真库测试 | 大多数项目都有"用户/账号"，可改名复用；不适合就先照它写自己的第一个域，再删掉它 |
-| **可选样例** | `product` 域及其接口、测试、`ProductMapper.xml`、schema 里的商品表 | 用不上就整块删掉 |
+| **待你新增** | 你自己的业务域（一个域 = 一个 `domain/<业务>` + `application/<业务>` + 入口 + 表 + 测试） | 照黄金切片的形状加；加第二个域时，`ArchitectureTest` 里的上下文边界规则会开始生效 |
 
 ## 五、配合 AI 的用法
 

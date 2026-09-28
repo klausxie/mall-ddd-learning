@@ -12,7 +12,7 @@ description: mall 项目的开发规范细节。新增或修改接口、请求�
 | 项 | 规则 |
 |---|---|
 | HTTP 方法 | **只用 GET / POST**。查询用 GET；新增、修改、删除用 POST + 路径动词 |
-| 路径 | camelCase，例如 `/product/create`、`/product/onSale`、`/product/page` |
+| 路径 | camelCase，例如 `/user/create`、`/address/create`、`/address/page` |
 | 分页参数 | 固定 `curPage`（从 1 开始）、`pageSize`（默认 10） |
 | 分页响应 | 统一 `common.model.Page<T>`：`{ curPage, pageSize, total, records }` |
 | 统一响应 | 统一 `common.model.Response<T>`：`{ code, message, data }` |
@@ -21,10 +21,10 @@ description: mall 项目的开发规范细节。新增或修改接口、请求�
 
 | 场景 | 正确 | 错误 |
 |---|---|---|
-| 分页查询 | `GET /product/page?curPage=1&pageSize=10` | `/product/page?pageNumber=1` |
-| 上架 | `POST /product/onSale` | `PUT /product/onSale` |
-| 删除 | `POST /product/remove` | `DELETE /product/1` |
-| 详情 | `GET /product/get` | `/product/get-detail` |
+| 分页查询 | `GET /address/page?curPage=1&pageSize=10` | `/address/page?pageNumber=1` |
+| 新增 | `POST /address/create` | `PUT /address/create` |
+| 删除 | `POST /address/remove` | `DELETE /address/1` |
+| 详情 | `GET /user/get` | `/user/get-detail` |
 
 ## 二、分页模板
 
@@ -32,15 +32,10 @@ description: mall 项目的开发规范细节。新增或修改接口、请求�
 
 ```java
 @Data
-public class ProductPageRequest extends Pageable {
+public class AddressPageRequest extends Pageable {
 
-    private String keyword;
-    private ProductStatus status;
-
-    public ProductPageCondition buildCondition() {
-        return ProductPageCondition.builder()
-                .keyword(keyword)
-                .status(status)
+    public AddressPageCondition buildCondition() {
+        return AddressPageCondition.builder()
                 .offset(getOffset())
                 .size(getPageSize())
                 .build();
@@ -50,6 +45,7 @@ public class ProductPageRequest extends Pageable {
 
 领域层查询条件用 `offset` + `size`（**这是内部字段，不是对外参数名**），
 对外一律 `curPage` / `pageSize`，两者在 `buildCondition()` 里转换。
+需要过滤条件就往 request 和 condition 上各加一个同名字段。
 
 ## 三、分层与依赖方向
 
@@ -65,27 +61,34 @@ web → application → domain → common
 2. `domain` **不依赖** application / web / infrastructure，也不感知具体存储实现；
 3. `infrastructure` 的实现通过 `domain` 里的接口暴露，由 Spring 注入。
 
-违反会被 `ArchitectureTest` 拦下。
+违反会被 `ArchitectureTest` 拦下。另外两条容易忘的：
+
+- 断言（`Assert` / `Asserts`）**只允许出现在 domain**；编排层报错抛 `ErrorCodeException`；
+- `web` 只依赖 `application` + `common`，**不得直接引用 domain 的实体**（响应模型放 `application/.../response`）。
 
 ## 四、新建一个接口的完整清单
 
-以 "商品下架" 为例：
+以"新增收货地址"为例（仓库里已有可对照的实现）：
 
-- [ ] `application/product/command/request/ProductOffSaleRequest.java` —— 请求 DTO，`@Data`
-- [ ] 在 `ProductCmdService` 加方法声明
-- [ ] 在 `ProductCmdServiceImpl` 实现，**只编排**，业务规则放 `domain`
-- [ ] 业务规则写在 `Product` 实体的方法（如 `becomeOffSale()`）或 `ProductValidator`
-- [ ] `web/ProductController` 加 `@PostMapping("offSale")`
+- [ ] `application/user/command/request/AddressCreateRequest.java` —— 请求 DTO，`@Data` + 必填校验注解
+- [ ] `application/user/query/response/AddressInfo.java` —— 响应模型，**不要把领域实体直接返回**
+- [ ] 在 `UserCmdService` 加方法声明
+- [ ] 在 `UserCmdServiceImpl` 实现，**只编排**，业务规则放 `domain`
+- [ ] 业务规则写在实体方法（如 `Address.validate()` / `assertOwnedBy()`）、`UserValidator`、
+      `XxxSpec`（判断是不是）或 `XxxPolicy`（算出一个值）
+- [ ] `web/AddressController` 加 `@PostMapping("create")`，返回 `Response<AddressInfo>`
+- [ ] 需要落库：改 Mapper 接口 + `resources/mapper/XxxMapper.xml` + `resources/schema.sql` 三处保持一致
 - [ ] 分页接口才需要 `Pageable` / `Page`
+- [ ] 补测试：领域规则写单测；端到端写 `*ApiTest`（真库、`@Transactional` 回滚）
 - [ ] 跑 `./mvnw verify`
 
 ## 五、常用写法
 
 ```java
-// 控制器：只做转发，不写逻辑
-@PostMapping("onSale")
-public void onSaleProduct(@RequestBody ProductOnSaleRequest request) {
-    productCmdService.onSaleProduct(request);
+// 控制器：只做转发，不写逻辑；返回统一响应 + 响应模型
+@PostMapping("create")
+public Response<AddressInfo> createAddress(@Valid @RequestBody AddressCreateRequest request) {
+    return Response.ok(userCmdService.createAddress(request));
 }
 
 // 依赖注入：构造器注入，不用 @Autowired
@@ -98,8 +101,13 @@ public class UserQueryServiceImpl implements UserQueryService {
 }
 
 // 校验失败：用 Asserts + 业务错误码，不要抛裸 RuntimeException
-Asserts.state(present, ProductErrorCode.PRODUCT_NOT_EXISTS);
+Asserts.state(present, UserErrorCode.ADDRESS_NOT_EXISTS);
+
+// 实体自己守不变量；不变量写在方法里，而不是靠调用方自觉
+public void validate() {
+    Asserts.state(recipient != null && !recipient.isBlank(), UserErrorCode.RECIPIENT_IS_REQUIRED);
+}
 
 // 日志：@Slf4j，不要 System.out
-log.warn("商品不存在: {}", productId);
+log.warn("地址不存在: {}", addressId);
 ```

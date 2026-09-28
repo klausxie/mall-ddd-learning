@@ -9,7 +9,6 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -28,18 +27,18 @@ class UserValidatorTest {
     private final UserValidator validator = new UserValidator(userMapper, captchaService);
 
     @Test
-    void shouldRejectIllegalMobileFormat() {
-        when(userMapper.getUserByMobile(anyString())).thenReturn(Optional.empty());
-
-        assertCode(UserErrorCode.MOBILE_FORMAT_ILLEGAL, () -> validator.assertMobileCanUse("12345"));
-        assertCode(UserErrorCode.MOBILE_FORMAT_ILLEGAL, () -> validator.assertMobileCanUse(null));
+    void shouldRejectIllegalMobileFormatWhenBuildingValueObject() {
+        assertCode(UserErrorCode.MOBILE_FORMAT_ILLEGAL, () -> new Mobile("12345"));
+        assertCode(UserErrorCode.MOBILE_FORMAT_ILLEGAL, () -> new Mobile(null));
+        assertCode(UserErrorCode.MOBILE_FORMAT_ILLEGAL, () -> new Mobile("23900000000"));
     }
 
     @Test
     void shouldRejectMobileAlreadyRegistered() {
-        when(userMapper.getUserByMobile(MOBILE)).thenReturn(Optional.of(new User()));
+        Mobile mobile = new Mobile(MOBILE);
+        when(userMapper.getUserByMobile(mobile)).thenReturn(Optional.of(new User()));
 
-        assertCode(UserErrorCode.MOBILE_ALREADY_EXISTS, () -> validator.assertMobileCanUse(MOBILE));
+        assertCode(UserErrorCode.MOBILE_ALREADY_EXISTS, () -> validator.assertMobileCanUse(mobile));
     }
 
     @Test
@@ -67,7 +66,7 @@ class UserValidatorTest {
     @Test
     void shouldPassRegisterChecksWhenEverythingIsFine() {
         when(captchaService.isCaptchaValidate(MOBILE, CAPTCHA)).thenReturn(true);
-        when(userMapper.getUserByMobile(MOBILE)).thenReturn(Optional.empty());
+        when(userMapper.getUserByMobile(new Mobile(MOBILE))).thenReturn(Optional.empty());
 
         assertDoesNotThrow(() -> validator.assertCanRegister(MOBILE, PASSWORD, CAPTCHA));
     }

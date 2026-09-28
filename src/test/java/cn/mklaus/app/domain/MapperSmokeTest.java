@@ -1,11 +1,8 @@
 package cn.mklaus.app.domain;
 
-import cn.mklaus.app.domain.product.Product;
-import cn.mklaus.app.domain.product.ProductMapper;
-import cn.mklaus.app.domain.product.ProductStatus;
-import cn.mklaus.app.domain.product.query.condition.ProductPageCondition;
 import cn.mklaus.app.domain.user.Address;
 import cn.mklaus.app.domain.user.AddressMapper;
+import cn.mklaus.app.domain.user.Mobile;
 import cn.mklaus.app.domain.user.User;
 import cn.mklaus.app.domain.user.UserMapper;
 import cn.mklaus.app.domain.user.query.AddressPageCondition;
@@ -14,8 +11,6 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -46,12 +41,10 @@ class MapperSmokeTest {
 
     private final UserMapper userMapper;
     private final AddressMapper addressMapper;
-    private final ProductMapper productMapper;
 
-    MapperSmokeTest(UserMapper userMapper, AddressMapper addressMapper, ProductMapper productMapper) {
+    MapperSmokeTest(UserMapper userMapper, AddressMapper addressMapper) {
         this.userMapper = userMapper;
         this.addressMapper = addressMapper;
-        this.productMapper = productMapper;
     }
 
     @Test
@@ -59,57 +52,20 @@ class MapperSmokeTest {
         String mobile = uniqueMobile();
 
         User user = new User();
-        user.setMobile(mobile);
+        user.setMobile(new Mobile(mobile));
         user.setPassword("pbkdf2$600000$c2FsdA==$aGFzaA==");
         user.setNickname("smoke");
         user.setAge(20);
 
         userMapper.saveUser(user);
         assertNotNull(user.getId(), "saveUser 应回填自增主键");
-        assertEquals(mobile, userMapper.getUser(user.getId()).orElseThrow().getMobile());
-        assertEquals(user.getId(), userMapper.getUserByMobile(mobile).orElseThrow().getId());
+        // 值对象要能原样往返：Mobile 有值语义，所以这里直接比对象而不是比字符串
+        assertEquals(new Mobile(mobile), userMapper.getUser(user.getId()).orElseThrow().getMobile());
+        assertEquals(user.getId(), userMapper.getUserByMobile(new Mobile(mobile)).orElseThrow().getId());
 
         user.setNickname("smoke-updated");
         userMapper.updateUser(user);
         assertEquals("smoke-updated", userMapper.getUser(user.getId()).orElseThrow().getNickname());
-    }
-
-    @Test
-    void productMapperShouldRoundTripAndFilter() {
-        String keyword = "smoke" + System.nanoTime();
-        Product first = buildProduct(keyword + "-1");
-        Product second = buildProduct(keyword + "-2");
-
-        productMapper.saveProduct(first);
-        productMapper.saveProduct(second);
-        assertNotNull(first.getId(), "saveProduct 应回填自增主键");
-        assertNotNull(second.getId(), "saveProduct 应回填自增主键");
-
-        Product loaded = productMapper.getProduct(first.getId()).orElseThrow();
-        assertEquals(keyword + "-1", loaded.getName());
-        assertEquals(ProductStatus.PENDING, loaded.getStatus(), "枚举应按名称往返");
-        assertEquals(first.getId(), productMapper.getProductByName(keyword + "-1").orElseThrow().getId());
-
-        ProductPageCondition all = ProductPageCondition.builder().keyword(keyword).offset(0).size(10).build();
-        List<Product> records = productMapper.listProduct(all);
-        assertEquals(2, records.size());
-        assertEquals(2L, productMapper.countProduct(all));
-
-        ProductPageCondition onSale = ProductPageCondition.builder()
-            .keyword(keyword)
-            .status(ProductStatus.ON_SALE)
-            .offset(0)
-            .size(10)
-            .build();
-        assertEquals(0L, productMapper.countProduct(onSale));
-
-        loaded.setPrice(999L);
-        loaded.setStatus(ProductStatus.ON_SALE);
-        productMapper.updateProduct(loaded);
-        assertEquals(999L, productMapper.getProduct(first.getId()).orElseThrow().getPrice());
-
-        productMapper.removeProduct(loaded);
-        assertTrue(productMapper.getProduct(first.getId()).isEmpty());
     }
 
     @Test
@@ -144,18 +100,6 @@ class MapperSmokeTest {
 
     private static String uniqueMobile() {
         return "139" + String.format("%08d", Math.abs(System.nanoTime() % 100_000_000L));
-    }
-
-    private static Product buildProduct(String name) {
-        Product product = new Product();
-        product.setStatus(ProductStatus.PENDING);
-        product.setName(name);
-        product.setDescription("smoke");
-        product.setContent("smoke content");
-        product.setCover("http://example.com/cover.png");
-        product.setPrice(100L);
-        product.setInventory(5);
-        return product;
     }
 
 }

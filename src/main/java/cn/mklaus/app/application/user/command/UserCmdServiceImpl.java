@@ -51,7 +51,7 @@ public class UserCmdServiceImpl implements UserCmdService {
         int points = new RegistrationPointsPolicy().pointsFor(user);
         UserCreatedEvent event = new UserCreatedEvent();
         event.setUserId(user.getId());
-        event.setMobile(user.getMobile());
+        event.setMobile(user.getMobile().value());
         event.setAge(user.getAge());
         event.setPoints(points);
         eventPublisher.publish(event);

@@ -1,5 +1,6 @@
 package cn.mklaus.app.web;
 
+import cn.mklaus.app.domain.user.Mobile;
 import cn.mklaus.app.domain.user.User;
 import cn.mklaus.app.domain.user.UserMapper;
 import com.jayway.jsonpath.JsonPath;
@@ -53,7 +54,7 @@ class AddressApiTest {
     @BeforeEach
     void prepareOperator() {
         User user = new User();
-        user.setMobile("139" + String.format("%08d", Math.abs(System.nanoTime() % 100_000_000L)));
+        user.setMobile(new Mobile("139" + String.format("%08d", Math.abs(System.nanoTime() % 100_000_000L))));
         user.setPassword("pbkdf2$600000$c2FsdA==$aGFzaA==");
         user.setAge(30);
         userMapper.saveUser(user);

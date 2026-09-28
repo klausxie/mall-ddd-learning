@@ -49,28 +49,3 @@ CREATE TABLE IF NOT EXISTS `address`
     KEY `idx_address_user_id` (`user_id`)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COMMENT ='收货地址';
-
--- ---------------------------------------------------------------------------
--- 商品：对应 cn.mklaus.app.domain.product.Product
---   状态列存枚举名（PENDING / ON_SALE / OFF_SALE），MyBatis 默认 EnumTypeHandler 即按 name() 存取
--- ---------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `product`
-(
-    `id`          BIGINT       NOT NULL AUTO_INCREMENT COMMENT '商品 ID',
-    `status`      VARCHAR(16)  NOT NULL COMMENT '状态：PENDING / ON_SALE / OFF_SALE',
-    `name`        VARCHAR(100) NOT NULL COMMENT '商品名称（ProductValidator 要求全局唯一）',
-    `description` VARCHAR(255)          DEFAULT NULL COMMENT '简介',
-    `content`     TEXT                  DEFAULT NULL COMMENT '详情',
-    `cover`       VARCHAR(255)          DEFAULT NULL COMMENT '封面地址',
-    `price`       BIGINT       NOT NULL COMMENT '价格，单位：分（Product.validate 要求 > 0）',
-    `inventory`   INT          NOT NULL DEFAULT 0 COMMENT '库存（Product.validate 要求 >= 0）',
-    `created_at`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    `updated_at`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_product_name` (`name`),
-    KEY `idx_product_status` (`status`),
-    -- CHECK 在 MySQL 8.0.16+ 才真正生效，低版本会被解析后忽略（不会报错）
-    CONSTRAINT `chk_product_price` CHECK (`price` > 0),
-    CONSTRAINT `chk_product_inventory` CHECK (`inventory` >= 0)
-) ENGINE = InnoDB
-  DEFAULT CHARSET = utf8mb4 COMMENT ='商品';

@@ -13,7 +13,7 @@ public interface UserMapper {
 
     Optional<User> getUser(long id);
 
-    Optional<User> getUserByMobile(String mobile);
+    Optional<User> getUserByMobile(Mobile mobile);
 
     void saveUser(User user);
 

@@ -23,7 +23,7 @@ public class UserInfo {
     public static UserInfo of(User user) {
         return UserInfo.builder()
             .id(user.getId())
-            .mobile(user.getMobile())
+            .mobile(user.getMobile().value())
             .nickname(user.getNickname())
             .avatar(user.getAvatar())
             .age(user.getAge())

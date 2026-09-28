@@ -37,7 +37,7 @@ src/main/java/cn/mklaus/app/
 ├── domain/                       【核心层】业务规则与领域模型，不感知框架与存储
 │   ├── common/                               跨业务能力接口（验证码 / 事件 / 密码哈希）
 │   └── <业务>/
-│       ├── User / Product / ...              实体，自带永远成立的不变量校验方法
+│       ├── User / Address / ...              实体，自带永远成立的不变量校验方法
 │       ├── XxxValidator.java                 单实体校验（需要查库的规则放这里）
 │       ├── XxxErrorCode.java                 本业务的错误码与信息模板
 │       ├── spec/                             按用例生效的可组合约束 XxxSpec
@@ -146,7 +146,7 @@ web ──────────► application ──────────
 | `ApplicationContextTest` | 否 | Bean 装配 + Mapper XML 解析 + Controller 注册 |
 | 领域 / 基础设施单测 | 否 | Spec / Policy / 密码哈希 / 分页 / 上下文 |
 | `MapperSmokeTest` | 是 | 真库 SQL：`schema.sql` 对齐、自增回填、枚举往返、分页 |
-| `UserRegisterApiTest`、`AddressApiTest`、`ProductApiTest` | 是 | HTTP 端到端：注册送积分、地址增删改查、商品上下架 |
+| `UserRegisterApiTest`、`AddressApiTest` | 是 | HTTP 端到端：注册送积分、地址增删改查与分页 |
 
 - `./mvnw verify` 只跑前四类，几秒出结果，**不需要数据库**；
 - 真库测试默认跳过，由 `MALL_DB_PASSWORD` 打开，且都带 `@Transactional`，跑完自动回滚；
