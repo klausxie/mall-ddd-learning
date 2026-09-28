@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: cn.mklaus.app.common.model.PageableTest
--------------------------------------------------------------------------------
-Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.002 s -- in cn.mklaus.app.common.model.PageableTest
