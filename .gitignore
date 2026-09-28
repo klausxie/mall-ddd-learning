@@ -2,3 +2,5 @@
 application-local.yaml
 application-local.yml
 .env
+target/
+.idea/
