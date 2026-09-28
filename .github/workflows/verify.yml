@@ -36,9 +36,7 @@ jobs:
           java-version: '17'
           cache: maven
 
-      - name: Init schema
-        run: mysql -h 127.0.0.1 -P 3306 -uklaus -pklaus mall < src/main/resources/schema.sql
-
+      # 建表由 Flyway 在 Spring 上下文启动时完成；
       # verify = spotless:check + checkstyle + ArchUnit + 单测；
       # 真库测试默认跳过，靠 MALL_DB_PASSWORD 打开；数据源用环境变量覆盖 application.yaml。
       - name: Verify

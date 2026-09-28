@@ -77,7 +77,7 @@ web → application → domain → common
 - [ ] 业务规则写在实体方法（如 `Address.validate()` / `assertOwnedBy()`）、`UserValidator`、
       `XxxSpec`（判断是不是）或 `XxxPolicy`（算出一个值）
 - [ ] `web/AddressController` 加 `@PostMapping("create")`，返回 `Response<AddressInfo>`
-- [ ] 需要落库：改 Mapper 接口 + `resources/mapper/XxxMapper.xml` + `resources/schema.sql` 三处保持一致
+- [ ] 需要落库：改 Mapper 接口 + `resources/mapper/XxxMapper.xml` + 新增 `db/migration/V2__xxx.sql` 三者保持一致
 - [ ] 分页接口才需要 `Pageable` / `Page`
 - [ ] 补测试：领域规则写单测；端到端写 `*ApiTest`（真库、`@Transactional` 回滚）
 - [ ] 跑 `./mvnw verify`

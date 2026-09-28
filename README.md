@@ -14,7 +14,7 @@ Spring Boot 3.5 + MyBatis-Plus + JDK 17 的 **AI + DDD 工程模板**：规范�
 ## 快速开始
 
 ```bash
-# 1. 起本地 MySQL（首次启动会自动执行 schema.sql + seed.sql）
+# 1. 起本地 MySQL（只建空库；建表由应用启动时的 Flyway 完成）
 docker compose up -d
 
 # 2. 配置数据源（compose 里就是 klaus/klaus；不配则用 application.yaml 的 localhost 默认值）

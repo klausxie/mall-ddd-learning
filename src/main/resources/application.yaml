@@ -7,9 +7,14 @@ spring:
     password: ${MALL_DB_PASSWORD:}
   sql:
     init:
-      # 建表脚本由 docker compose 初始化或手工执行，不交给 Spring；
-      # 设成 embedded 会让它在启动时探测库类型（连不上就刷 ERROR 日志），所以直接关掉
+      # 建表交给 Flyway；这条防止有人误放 schema.sql / data.sql 触发 Spring 自动初始化
+      # （mode=embedded 会在启动时探测库类型，连不上就刷 ERROR 日志）
       mode: never
+  flyway:
+    # 迁移脚本：src/main/resources/db/migration/V*.sql，应用启动时自动执行
+    locations: classpath:db/migration
+    # 已经有手工建表的库（或历史环境）第一次接入时打 baseline，而不是报错
+    baseline-on-migrate: true
 
 mybatis-plus:
   mapper-locations: classpath*:/mapper/**/*.xml

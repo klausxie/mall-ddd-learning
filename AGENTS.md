@@ -41,7 +41,7 @@ web ──► application ──► domain ──► common
 
 ## 真库测试
 
-真库测试默认跳过（需要能连上 schema.sql 建好的库）：
+真库测试默认跳过（需要能连上库；建表由 Flyway 在上下文启动时完成）：
 
 ```bash
 MALL_DB_PASSWORD='<密码>' ./mvnw test -Dtest='MapperSmokeTest,UserRegisterApiTest,AddressApiTest'

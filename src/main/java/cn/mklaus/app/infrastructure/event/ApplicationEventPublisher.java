@@ -27,10 +27,17 @@ public class ApplicationEventPublisher implements EventPublisher {
         applicationContext.publishEvent(event);
     }
 
+    /**
+     * 事务提交后再发。没有事务时就地发。
+     *
+     * <p>
+     * 注意这里回调的是 {@link #publish(Object)} 而不是直接 {@code applicationContext.publishEvent}：
+     * 真实实现里"投递 MQ"才是主要动作，两条路径必须做同样的事，否则用 publishAfterCommit 的地方会静默漏发。
+     */
     @Override
     public void publishAfterCommit(Object event) {
         if (!TransactionSynchronizationManager.isSynchronizationActive()) {
-            applicationContext.publishEvent(event);
+            publish(event);
             return;
         }
 
@@ -38,7 +45,7 @@ public class ApplicationEventPublisher implements EventPublisher {
 
             @Override
             public void afterCommit() {
-                applicationContext.publishEvent(event);
+                publish(event);
             }
         });
     }

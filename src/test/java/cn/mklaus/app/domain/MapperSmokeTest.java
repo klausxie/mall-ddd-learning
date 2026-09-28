@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Mapper 的真库冒烟测试：证明 XML 里的 SQL 与 schema.sql 的表结构真的对得上。
+ * Mapper 的真库冒烟测试：证明 XML 里的 SQL 与 Flyway 迁移建的表结构真的对得上。
  *
  * <p>
  * 默认跳过（需要能连上数据库），显式提供密码时才跑：

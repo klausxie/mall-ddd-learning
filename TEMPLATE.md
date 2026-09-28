@@ -40,7 +40,7 @@ git clone <模板仓库> order-service && cd order-service
 - [ ] `src/main/resources/application.yaml`：默认数据源指向本地；**确认里面没有任何真实凭证**
 - [ ] `src/main/resources/application-local.yaml.example`：环境变量名已随项目改名（不再是模板的旧前缀）
 - [ ] `.github/workflows/verify.yml`：CI 用的库名/端口与 compose 一致
-- [ ] `src/main/resources/schema.sql`：删掉用不上的示例表，补自己的表
+- [ ] `src/main/resources/db/migration/V1__init_schema.sql`：删掉用不上的示例表；后续变更新增 `V2__xxx.sql`，**不要改已执行过的版本**
 - [ ] `.claude/skills/<prefix>-conventions/SKILL.md` 与 `CLAUDE.md` / `ARCHITECTURE.md`：把示例业务（用户/地址）替换成自己的领域语言
 - [ ] **替换下面的"样例替身"**，否则会带着假实现上线
 

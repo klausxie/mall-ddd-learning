@@ -158,7 +158,7 @@ web ──────────► application ──────────
 | `MapperStatementsTest` | 否 | Mapper 接口方法 ↔ XML statement 一一对账 |
 | `ApplicationContextTest` | 否 | Bean 装配 + Mapper XML 解析 + Controller 注册 |
 | 领域 / 基础设施单测 | 否 | Spec / Policy / 密码哈希 / 分页 / 上下文 |
-| `MapperSmokeTest` | 是 | 真库 SQL：`schema.sql` 对齐、自增回填、枚举往返、分页 |
+| `MapperSmokeTest` | 是 | 真库 SQL：与 Flyway 建的表对齐、自增回填、分页 |
 | `UserRegisterApiTest`、`AddressApiTest` | 是 | HTTP 端到端：注册送积分、地址增删改查与分页 |
 
 - `./mvnw verify` 只跑前四类，几秒出结果，**不需要数据库**；

@@ -21,7 +21,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * 黄金路径：注册 → 校验验证码 → 成年规格 → 密码哈希入库 → 按年龄送积分 → 统一响应。
  *
  * <p>
- * 需要真实数据库（走 schema.sql 建的表），默认跳过：
+ * 需要真实数据库（表由 Flyway 迁移创建），默认跳过：
  *
  * <pre>
  * MALL_DB_PASSWORD=xxx ./mvnw test -Dtest=UserRegisterApiTest
