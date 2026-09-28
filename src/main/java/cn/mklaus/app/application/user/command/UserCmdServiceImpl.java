@@ -14,7 +14,6 @@ import cn.mklaus.app.domain.common.EventPublisher;
 import cn.mklaus.app.domain.user.Address;
 import cn.mklaus.app.domain.user.AddressMapper;
 import cn.mklaus.app.domain.user.User;
-import cn.mklaus.app.domain.user.UserCreatedEvent;
 import cn.mklaus.app.domain.user.UserErrorCode;
 import cn.mklaus.app.domain.user.UserMapper;
 import cn.mklaus.app.domain.user.UserValidator;
@@ -49,12 +48,7 @@ public class UserCmdServiceImpl implements UserCmdService {
         userMapper.saveUser(user);
 
         int points = new RegistrationPointsPolicy().pointsFor(user);
-        UserCreatedEvent event = new UserCreatedEvent();
-        event.setUserId(user.getId());
-        event.setMobile(user.getMobile().value());
-        event.setAge(user.getAge());
-        event.setPoints(points);
-        eventPublisher.publish(event);
+        eventPublisher.publishAfterCommit(user.registeredEvent(points));
 
         return UserCreateResponse.of(user, points);
     }

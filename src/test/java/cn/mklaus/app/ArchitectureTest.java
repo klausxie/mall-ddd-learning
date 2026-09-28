@@ -149,6 +149,15 @@ class ArchitectureTest {
     }
 
     @Test
+    void webShouldOnlyDependOnApplicationAndCommon() {
+        ArchRule rule = noClasses()
+            .that().resideInAPackage(tree("web"))
+            .should().dependOnClassesThat().resideInAPackage(tree("domain"))
+            .because("web 只做协议转换：领域实体不出接口，要返回数据就用 application 的响应模型");
+        rule.check(CLASSES);
+    }
+
+    @Test
     void mybatisShouldOnlyLeakIntoMapperInterfaces() {
         // 已知例外：本次重构把 MyBatis 映射器接口放在了 domain 包，并加了 @Mapper。
         // 这里把例外收窄到 "以 Mapper 结尾的接口"，其余 domain 类不得感知持久化实现。

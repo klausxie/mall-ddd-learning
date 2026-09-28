@@ -8,4 +8,6 @@ public interface EventPublisher {
 
     void publish(Object event);
 
+    void publishAfterCommit(Object event);
+
 }

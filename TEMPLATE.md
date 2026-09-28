@@ -50,7 +50,7 @@ git clone <模板仓库> order-service && cd order-service
 |---|---|---|
 | 短信验证码 | `mall.captcha.fixed-code=123456` 固定码 | 生成随机码、调短信网关、Redis 存 5 分钟 |
 | 鉴权 | `X-Operator-Id` 请求头写入 `Context` | 解析 token / session；无身份由过滤器直接拒绝 |
-| 消息队列 | `RocketmqEventPublisher` 只打日志 | 投递真实 MQ，并保证幂等与重试 |
+| 消息队列 | `ApplicationEventPublisher` 只打日志并把事件转给 Spring 事件总线；`AfterCommitEventPublisher` 保证**提交后**才发 | 投递真实 MQ，并保证幂等与重试（保留提交后发布的语义） |
 | 积分 | `RegistrationPointsPolicy` 纯计算 + 事件 | 账户服务消费事件并落库 |
 | 密码哈希 | JDK 自带 PBKDF2（零第三方加密依赖） | 可换 BCrypt / Argon2，只改 `infrastructure/security` 实现类 |
 

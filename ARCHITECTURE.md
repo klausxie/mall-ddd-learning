@@ -119,6 +119,7 @@ web ──────────► application ──────────
 | 顶层包之间不得有循环依赖 | 分层失效的早期信号 |
 | `*Mapper` 必须是接口 | 实现由 MyBatis 生成 |
 | 实现 `Spec` 的类必须以 `Spec` 结尾且位于 `..spec..` 包 | 规格统一命名与位置 |
+| `web` 不得依赖 `domain` | 领域实体不出接口，返回数据用 `application/.../response` 的响应模型 |
 | `@RestController` 必须在 `web` 包 | HTTP 入口集中管理 |
 | `application` + `web` 不得使用 `Assert` / `Asserts` | 断言属于领域校验：编排层只能调 domain 的 Validator / Spec / 实体方法，报错就抛 `ErrorCodeException` |
 | request 对象不得出现 `limit` / `offset` / 历史分页名 | 对外分页参数只有 `curPage` / `pageSize` |
@@ -136,6 +137,18 @@ web ──────────► application ──────────
    目前未强制剥离。若要做到框架无关，需要引入显式 `@Configuration` 装配类。
    注意：`Spec` / `Policy` 这类纯规则是普通类、直接 `new`，**不要**再给它们加 `@Component`，
    免得偏差继续扩大。
+
+3. **实体保留 Lombok `@Data` 生成的访问器，不做全面封装。**
+   这是**有意的取舍**，不是遗漏：本项目的实体（`User` / `Address`）本身几乎不携带不变量——
+   真正的规则住在值对象（`Mobile` 构造即校验）、`XxxValidator`、`XxxSpec`、`XxxPolicy` 和实体自己的行为方法里。
+   全面去 setter 要把 MyBatis 改成构造器映射，从此**每加一个字段**都要同步构造器与 XML，
+   属于持续摩擦；而模板的高频操作恰恰是"加字段"。
+   策略是：**能在类型上免费守住的就守（值对象），守不住的靠 domain 里的规则 + 测试**。
+   将来某个实体真的积累了不变量（状态机、金额、有效期），再单独封装它，收益才成立。
+
+4. **跨限界上下文的依赖规则暂未启用。**
+   模板目前只有一个上下文（`user`），"上下文之间不得互相引用实体"这类规则加了也是空转。
+   等新项目长出第二个域时，在 `ArchitectureTest` 里补一条 `domain.<A>` 不得依赖 `domain.<B>` 即可。
 
 ## 五、测试分层
 
