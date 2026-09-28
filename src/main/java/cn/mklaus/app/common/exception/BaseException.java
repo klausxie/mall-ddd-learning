@@ -9,13 +9,13 @@ import lombok.NoArgsConstructor;
  * @since 2023/11/4
  */
 @NoArgsConstructor
-public class MallException extends RuntimeException {
+public class BaseException extends RuntimeException {
 
-    public MallException(String message) {
+    public BaseException(String message) {
         super(message);
     }
 
-    public MallException(String message, Throwable cause) {
+    public BaseException(String message, Throwable cause) {
         super(message, cause);
     }
 

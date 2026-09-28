@@ -1,7 +1,9 @@
 # mall
 
-Spring Boot 3.5 + MyBatis-Plus + JDK 17 的单体示例工程，用来演示**AI 驱动开发**下的一套完整约束：
-规范写在文档里、能被工具强制、改完有一条命令可以验证。
+Spring Boot 3.5 + MyBatis-Plus + JDK 17 的 **AI + DDD 工程模板**：规范写在文档里、由工具强制、
+改完有一条命令可以验证。新项目从它初始化，用法见 **[TEMPLATE.md](TEMPLATE.md)**。
+
+本仓库同时也是模板的自演示：把模板本身的规则、测试、CI 跑通，就是新项目该有的起点。
 
 ## 环境要求
 
@@ -73,12 +75,6 @@ MALL_DB_PASSWORD='<你的密码>' ./mvnw clean verify -Pcoverage-check -Dspring.
 | 各 `*Test` 单测 | Spec / Policy / 密码哈希 / 分页 / 上下文 / 商品状态机 / 地址归属等 |
 | `MapperSmokeTest`、`*ApiTest` | 真库 SQL 与 HTTP 端到端（`MALL_DB_PASSWORD` 打开） |
 
-## 接口文档
-
-启动后 OpenAPI 描述在 `GET /v3/api-docs`（YAML 版 `/v3/api-docs.yaml`）。
-交互式 Swagger UI 暂时关闭：springdoc 2.8.x 推导出的 UI 资源路径在 Spring Framework 6.2 更严格的
-路径解析下非法（`No more pattern data allowed after **`），会让上下文启动失败；升级 springdoc 后可打开。
-
 ## 接口一览
 
 | 方法 | 路径 | 说明 |
@@ -95,20 +91,17 @@ MALL_DB_PASSWORD='<你的密码>' ./mvnw clean verify -Pcoverage-check -Dspring.
 
 ## 规范入口
 
+- [TEMPLATE.md](TEMPLATE.md)：**怎么用它初始化新项目**、初始化后清单、AI 协作提示词模板
 - [CLAUDE.md](CLAUDE.md)：怎么做、硬性禁令、构建与验证
 - [ARCHITECTURE.md](ARCHITECTURE.md)：目录职责、分层规则、已知偏差
 - [.claude/skills/mall-conventions/SKILL.md](.claude/skills/mall-conventions/SKILL.md)：动手时照着抄的细节与新建接口清单
 - [AGENTS.md](AGENTS.md)：给任意 AI coding agent 的入口（与 harness 无关）
+- [scripts/init.sh](scripts/init.sh)：一条命令改名初始化
 
-## 样例替身清单（都是有意为之，不是遗漏）
+## 样例替身清单
 
-| 能力 | 样例里的做法 | 真实项目该怎么做 |
-|---|---|---|
-| 短信验证码 | `mall.captcha.fixed-code=123456` 固定码 | 生成随机码、调短信网关、Redis 存 5 分钟 |
-| 鉴权 | `X-Operator-Id` 请求头写入 `Context` | 解析 token / session，失效身份由过滤器拒绝 |
-| 消息队列 | `RocketmqEventPublisher` 只打日志 | 投递 RocketMQ，并保证幂等与重试 |
-| 积分 | `RegistrationPointsPolicy` 纯计算 + 事件回显 | 积分账户服务消费事件、落库 |
-| 密码哈希 | JDK 自带 PBKDF2（不引第三方加密库） | 可换 BCrypt / Argon2，只改 `infrastructure/security` 实现类 |
+验证码、鉴权、消息队列、积分、密码哈希这几处都是**有意为之的替身**（不是遗漏），
+它们在 [TEMPLATE.md](TEMPLATE.md) 的"样例替身清单"里逐条列了真实项目该怎么替换。
 
 ## 目录结构
 

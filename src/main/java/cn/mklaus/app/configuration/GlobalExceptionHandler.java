@@ -1,8 +1,8 @@
 package cn.mklaus.app.configuration;
 
+import cn.mklaus.app.common.exception.BaseException;
 import cn.mklaus.app.common.exception.CommonErrorCode;
 import cn.mklaus.app.common.exception.ErrorCodeException;
-import cn.mklaus.app.common.exception.MallException;
 import cn.mklaus.app.common.model.Response;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,9 +32,9 @@ public class GlobalExceptionHandler {
         return Response.error(e.getErrorCode().getCode(), e.getMessage());
     }
 
-    @ExceptionHandler(MallException.class)
-    public Response<Void> handleMallException(MallException e) {
-        log.warn("Mall exception catch: {}", e.getMessage());
+    @ExceptionHandler(BaseException.class)
+    public Response<Void> handleBaseException(BaseException e) {
+        log.warn("Base exception catch: {}", e.getMessage());
         return Response.error(e.getMessage());
     }
 

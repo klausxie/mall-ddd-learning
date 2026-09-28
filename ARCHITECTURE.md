@@ -2,6 +2,10 @@
 
 本文是**结构规范的唯一事实来源**。`CLAUDE.md` 只写"怎么做"，细节在这里。
 
+> **这个仓库是模板**：把它初始化成新项目的方式、改名清单、初始化后必须确认的事，
+> 见 [TEMPLATE.md](TEMPLATE.md)；改名脚本是 [scripts/init.sh](scripts/init.sh)。
+> 注意 `ArchitectureTest` 的包名从 `Application` 推导，**不要在规则里写死包名**，否则改名必漏。
+
 > 目录怎么摆很难自动检查，但"谁不许依赖谁"是可以的——所以下文的**分层规则**同时写进了
 > `src/test/java/cn/mklaus/app/ArchitectureTest.java`，违反会直接让 `mvn verify` 失败。
 

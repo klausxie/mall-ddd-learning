@@ -20,23 +20,31 @@ import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.sli
  * 目录怎么摆很难自动判断，但"谁不许依赖谁"是可以的。
  *
  * <p>
+ * 注意：包名一律从 {@link Application} 推导（{@link #BASE_PACKAGE}），**不要在这里写死**。
+ * 这个工程会被当作模板复制出去改名，写死的话改名脚本要改几十处，很容易漏。
+ *
+ * <p>
  * 新增分层时，请同步更新 {@code ARCHITECTURE.md} 与本文件。
  *
  * @author klausxie
  */
 class ArchitectureTest {
 
+    /**
+     * 基础包名，从启动类推导：换项目、改包名时这里不用动。
+     */
+    private static final String BASE_PACKAGE = Application.class.getPackageName();
+
     private static final JavaClasses CLASSES = new ClassFileImporter()
         .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
-        .importPackages("cn.mklaus.app");
+        .importPackages(BASE_PACKAGE);
 
     @Test
     void domainShouldNotDependOnOuterLayers() {
         ArchRule rule = noClasses()
-            .that().resideInAPackage("cn.mklaus.app.domain..")
+            .that().resideInAPackage(tree("domain"))
             .should().dependOnClassesThat()
-            .resideInAnyPackage("cn.mklaus.app.application..", "cn.mklaus.app.web..",
-                "cn.mklaus.app.infrastructure..")
+            .resideInAnyPackage(tree("application"), tree("web"), tree("infrastructure"))
             .because("domain 是核心层，只能依赖 common，不得反向依赖上层");
         rule.check(CLASSES);
     }
@@ -44,10 +52,9 @@ class ArchitectureTest {
     @Test
     void commonShouldNotDependOnBusinessPackages() {
         ArchRule rule = noClasses()
-            .that().resideInAPackage("cn.mklaus.app.common..")
+            .that().resideInAPackage(tree("common"))
             .should().dependOnClassesThat()
-            .resideInAnyPackage("cn.mklaus.app.domain..", "cn.mklaus.app.application..", "cn.mklaus.app.web..",
-                "cn.mklaus.app.infrastructure..")
+            .resideInAnyPackage(tree("domain"), tree("application"), tree("web"), tree("infrastructure"))
             .because("common 必须是零业务依赖的公共设施，否则会退化成垃圾场");
         rule.check(CLASSES);
     }
@@ -55,8 +62,8 @@ class ArchitectureTest {
     @Test
     void webShouldNotBeDependedUpon() {
         ArchRule rule = noClasses()
-            .that().resideOutsideOfPackage("cn.mklaus.app.web..")
-            .should().dependOnClassesThat().resideInAPackage("cn.mklaus.app.web..")
+            .that().resideOutsideOfPackage(tree("web"))
+            .should().dependOnClassesThat().resideInAPackage(tree("web"))
             .because("web 是最外层，任何内部层都不得引用它");
         rule.check(CLASSES);
     }
@@ -64,8 +71,8 @@ class ArchitectureTest {
     @Test
     void domainAndApplicationShouldNotDependOnInfrastructure() {
         ArchRule rule = noClasses()
-            .that().resideInAnyPackage("cn.mklaus.app.domain..", "cn.mklaus.app.application..")
-            .should().dependOnClassesThat().resideInAPackage("cn.mklaus.app.infrastructure..")
+            .that().resideInAnyPackage(tree("domain"), tree("application"))
+            .should().dependOnClassesThat().resideInAPackage(tree("infrastructure"))
             .because("实现细节只能通过 domain 里的接口注入，不得直接依赖 infrastructure");
         rule.check(CLASSES);
     }
@@ -73,7 +80,7 @@ class ArchitectureTest {
     @Test
     void noCyclesBetweenTopLevelPackages() {
         ArchRule rule = slices()
-            .matching("cn.mklaus.app.(*)..")
+            .matching(BASE_PACKAGE + ".(*)..")
             .should().beFreeOfCycles()
             .because("顶层包之间出现循环依赖意味着分层已经失效");
         rule.check(CLASSES);
@@ -92,7 +99,7 @@ class ArchitectureTest {
     void restControllersShouldLiveInWebPackage() {
         ArchRule rule = classes()
             .that().areAnnotatedWith(RestController.class)
-            .should().resideInAPackage("cn.mklaus.app.web..")
+            .should().resideInAPackage(tree("web"))
             .because("所有 HTTP 入口统一放在 web 包，便于统一鉴权与异常处理");
         rule.check(CLASSES);
     }
@@ -129,13 +136,13 @@ class ArchitectureTest {
     @Test
     void applicationAndWebShouldNotCarryAssertions() {
         ArchRule noSpringAssert = noClasses()
-            .that().resideInAnyPackage("cn.mklaus.app.application..", "cn.mklaus.app.web..")
+            .that().resideInAnyPackage(tree("application"), tree("web"))
             .should().dependOnClassesThat().areAssignableTo(Assert.class)
             .because("断言是领域校验手段：编排层只能调用 domain 的 Validator / Spec / 实体方法");
         noSpringAssert.check(CLASSES);
 
         ArchRule noAsserts = noClasses()
-            .that().resideInAnyPackage("cn.mklaus.app.application..", "cn.mklaus.app.web..")
+            .that().resideInAnyPackage(tree("application"), tree("web"))
             .should().dependOnClassesThat().areAssignableTo(Asserts.class)
             .because("编排层需要报错时抛 ErrorCodeException，不要自己写断言");
         noAsserts.check(CLASSES);
@@ -147,12 +154,26 @@ class ArchitectureTest {
         // 这里把例外收窄到 "以 Mapper 结尾的接口"，其余 domain 类不得感知持久化实现。
         // 详见 ARCHITECTURE.md 的"已知偏差"一节。
         ArchRule rule = noClasses()
-            .that().resideInAPackage("cn.mklaus.app.domain..")
+            .that().resideInAPackage(tree("domain"))
             .and().haveSimpleNameNotEndingWith("Mapper")
             .should().dependOnClassesThat()
             .resideInAnyPackage("org.apache.ibatis..", "com.baomidou.mybatisplus..")
             .because("领域层不应感知持久化实现（Mapper 接口为已记录的例外）");
         rule.check(CLASSES);
+    }
+
+    /**
+     * 拼接出基础包下的子包（不含通配）。
+     */
+    private static String pkg(String child) {
+        return BASE_PACKAGE + "." + child;
+    }
+
+    /**
+     * 拼接出基础包下某个包的整棵子树，供 ArchUnit 的 {@code ..} 通配使用。
+     */
+    private static String tree(String child) {
+        return pkg(child) + "..";
     }
 
 }

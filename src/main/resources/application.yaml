@@ -20,11 +20,3 @@ mall:
     # 真实项目必须删掉这一项
     fixed-code: 123456
 
-springdoc:
-  api-docs:
-    # OpenAPI 描述：GET /v3/api-docs
-    enabled: true
-  swagger-ui:
-    # springdoc 2.8.x 的 UI 资源路径在 Spring Framework 6.2 的路径解析下非法（No more pattern data
-    # allowed after **），会让上下文启动失败，所以先关掉 UI；升级 springdoc 后可去掉这一行
-    enabled: false
