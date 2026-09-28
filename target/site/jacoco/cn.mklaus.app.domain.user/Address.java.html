@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Address.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">mall</a> &gt; <a href="index.source.html" class="el_package">cn.mklaus.app.domain.user</a> &gt; <span class="el_source">Address.java</span></div><h1>Address.java</h1><pre class="source lang-java linenums">package cn.mklaus.app.domain.user;
+
+import cn.mklaus.app.common.exception.Asserts;
+import lombok.Builder;
+import lombok.Data;
+
+/**
+ * @author klausxie
+ * @since 2023/8/15
+ */
+@Data
+@Builder
+public class Address {
+
+    private Long id;
+    private Long userId;
+    private String recipient;
+    private String phone;
+
+    private String province;
+    private String city;
+    private String district;
+    private String detail;
+
+    /**
+     * 永远成立的不变量。
+     */
+    public void validate() {
+<span class="fc bfc" id="L29" title="All 4 branches covered.">        Asserts.state(recipient != null &amp;&amp; !recipient.isBlank(), UserErrorCode.RECIPIENT_IS_REQUIRED);</span>
+<span class="fc" id="L30">    }</span>
+
+    /**
+     * 按用例生效的归属规则：只有地址的主人能改它。
+     */
+    public void assertOwnedBy(Long operatorId) {
+<span class="fc bfc" id="L36" title="All 4 branches covered.">        Asserts.state(userId != null &amp;&amp; userId.equals(operatorId), UserErrorCode.NO_PERMISSION);</span>
+<span class="fc" id="L37">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

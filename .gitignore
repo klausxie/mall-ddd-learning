@@ -1,5 +1,4 @@
-.idea/
-**/target/
-**/.DS_Store
-*.iml
-rebel.xml
+# 本地/私有配置，不要提交
+application-local.yaml
+application-local.yml
+.env

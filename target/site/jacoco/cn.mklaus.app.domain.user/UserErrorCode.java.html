@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserErrorCode.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">mall</a> &gt; <a href="index.source.html" class="el_package">cn.mklaus.app.domain.user</a> &gt; <span class="el_source">UserErrorCode.java</span></div><h1>UserErrorCode.java</h1><pre class="source lang-java linenums">package cn.mklaus.app.domain.user;
+
+import cn.mklaus.app.common.exception.ErrorCode;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+/**
+ * @author klaus
+ * @since 2026/9/28
+ */
+<span class="fc" id="L11">@Getter</span>
+@AllArgsConstructor
+public enum UserErrorCode implements ErrorCode {
+
+    /**
+     * 用户未成年
+     */
+<span class="fc" id="L18">    USER_MUST_BE_ADULT(50001, &quot;必须年满 {0} 周岁&quot;),</span>
+
+    /**
+     * 地址不存在
+     */
+<span class="fc" id="L23">    ADDRESS_NOT_EXISTS(50002, &quot;地址不存在&quot;),</span>
+
+    /**
+     * 用户不存在
+     */
+<span class="fc" id="L28">    USER_NOT_EXISTS(50003, &quot;用户不存在&quot;),</span>
+
+    /**
+     * 手机号格式不正确
+     */
+<span class="fc" id="L33">    MOBILE_FORMAT_ILLEGAL(50004, &quot;手机号码格式不正确&quot;),</span>
+
+    /**
+     * 手机号已存在
+     */
+<span class="fc" id="L38">    MOBILE_ALREADY_EXISTS(50005, &quot;手机号码已存在&quot;),</span>
+
+    /**
+     * 密码格式不正确
+     */
+<span class="fc" id="L43">    PASSWORD_FORMAT_ILLEGAL(50006, &quot;密码格式不正确&quot;),</span>
+
+    /**
+     * 验证码不正确
+     */
+<span class="fc" id="L48">    CAPTCHA_INCORRECT(50007, &quot;验证码不正确&quot;),</span>
+
+    /**
+     * 没有权限
+     */
+<span class="fc" id="L53">    NO_PERMISSION(50008, &quot;没有权限&quot;),</span>
+
+    /**
+     * 收件人不能为空
+     */
+<span class="fc" id="L58">    RECIPIENT_IS_REQUIRED(50009, &quot;收件人不能为空&quot;)</span>
+
+    ;
+
+    private final int code;
+    private final String template;
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

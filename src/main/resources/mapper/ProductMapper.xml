@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  商品持久化。列名与 resources/schema.sql 的 `product` 表一一对应。
+  status 是 ProductStatus 枚举，按枚举名存取（MyBatis 默认 EnumTypeHandler）。
+  列表与计数共用 productFilter，保证 total 与记录用同一套条件。
+-->
+<mapper namespace="cn.mklaus.app.domain.product.ProductMapper">
+
+    <resultMap id="productResult" type="cn.mklaus.app.domain.product.Product">
+        <id property="id" column="id"/>
+        <result property="status" column="status"/>
+        <result property="name" column="name"/>
+        <result property="description" column="description"/>
+        <result property="content" column="content"/>
+        <result property="cover" column="cover"/>
+        <result property="price" column="price"/>
+        <result property="inventory" column="inventory"/>
+    </resultMap>
+
+    <sql id="productColumns">
+        id, status, name, description, content, cover, price, inventory
+    </sql>
+
+    <sql id="productFilter">
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND name LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
+    </sql>
+
+    <select id="getProduct" resultMap="productResult">
+        SELECT
+        <include refid="productColumns"/>
+        FROM product
+        WHERE id = #{productId}
+    </select>
+
+    <select id="getProductByName" resultMap="productResult">
+        SELECT
+        <include refid="productColumns"/>
+        FROM product
+        WHERE name = #{name}
+    </select>
+
+    <insert id="saveProduct" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO product (status, name, description, content, cover, price, inventory)
+        VALUES (#{status}, #{name}, #{description}, #{content}, #{cover}, #{price}, #{inventory})
+    </insert>
+
+    <!-- 全字段更新：调用方（ProductService / ProductCmdServiceImpl）传进来的都是已加载的完整实体 -->
+    <update id="updateProduct">
+        UPDATE product
+        SET status      = #{status},
+            name        = #{name},
+            description = #{description},
+            content     = #{content},
+            cover       = #{cover},
+            price       = #{price},
+            inventory   = #{inventory}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="removeProduct">
+        DELETE
+        FROM product
+        WHERE id = #{id}
+    </delete>
+
+    <select id="listProduct" resultMap="productResult">
+        SELECT
+        <include refid="productColumns"/>
+        FROM product
+        <include refid="productFilter"/>
+        ORDER BY id DESC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="countProduct" resultType="long">
+        SELECT COUNT(*)
+        FROM product
+        <include refid="productFilter"/>
+    </select>
+
+</mapper>

@@ -1,0 +1,133 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+<!--
+  mall 项目 Checkstyle 规则。
+
+  ⚠️ 职责边界：格式（缩进/换行/行宽/空白/import 顺序）由 Spotless 负责，
+  本文件**刻意不包含**任何 Whitespace / Indentation / LineLength / ImportOrder 规则，
+  否则两边会互相打架，mvn verify 永远红。
+
+  Checkstyle 只管：命名、修饰符、结构、以及"格式化管不到的禁令"。
+-->
+<module name="Checker">
+    <property name="charset" value="UTF-8"/>
+    <property name="severity" value="error"/>
+    <property name="fileExtensions" value="java"/>
+
+    <!-- 包声明前不允许有注释/空行（属于结构，不属于格式化） -->
+    <module name="NewlineAtEndOfFile">
+        <property name="lineSeparator" value="lf"/>
+    </module>
+
+    <module name="TreeWalker">
+
+        <!-- ===== 命名 ===== -->
+        <module name="PackageName"/>
+        <module name="TypeName"/>
+        <module name="MethodName"/>
+        <module name="MemberName"/>
+        <module name="ParameterName"/>
+        <module name="LocalVariableName"/>
+        <module name="ConstantName"/>
+
+        <!-- ===== 修饰符 ===== -->
+        <!-- 抓 private final static xxx，必须是 private static final -->
+        <module name="ModifierOrder"/>
+        <module name="RedundantModifier"/>
+
+        <!-- ===== import ===== -->
+        <!-- import 顺序由 Spotless 管，这里只禁止通配符导入 -->
+        <module name="AvoidStarImport"/>
+        <module name="RedundantImport"/>
+        <module name="IllegalImport">
+            <property name="illegalPkgs" value="sun, com.sun, jdk.internal"/>
+        </module>
+
+        <!-- ===== 结构 ===== -->
+        <module name="OneTopLevelClass"/>
+        <module name="NeedBraces"/>
+        <module name="EmptyBlock">
+            <property name="option" value="text"/>
+        </module>
+        <module name="EmptyCatchBlock"/>
+        <module name="EqualsHashCode"/>
+        <module name="SimplifyBooleanExpression"/>
+        <module name="SimplifyBooleanReturn"/>
+        <module name="StringLiteralEquality"/>
+        <module name="MissingSwitchDefault"/>
+        <module name="FallThrough"/>
+        <module name="DefaultComesLast"/>
+        <module name="UpperEll"/>
+        <module name="MultipleVariableDeclarations"/>
+
+        <!--
+          分隔符换行位置。
+
+          ⚠️ 只有 DOT 可以开。`option=nl` 要求分隔符另起一行，而 Eclipse formatter
+          折行时把点号放在行首、把逗号放在行尾。所以：
+            - DOT  + nl  → 与 Spotless 一致，安全（但基本冗余，Spotless 已经保证了）
+            - COMMA + nl → 与 Spotless 正面冲突，spotless:apply 永远修不好，verify 会一直红
+          其余 SEMI / ELLIPSIS / ARRAY_DECLARATOR 同 COMMA，不要加。
+
+          另外：本规则只在「换行已经发生」时检查位置。整条语句写在一行里（哪怕超出
+          120 列）它不会报——行宽是 Spotless 的职责，`mvn spotless:check` 会报。
+        -->
+        <module name="SeparatorWrap">
+            <property name="tokens" value="DOT"/>
+            <!-- 'nl' 表示点号必须在新的一行 -->
+            <property name="option" value="nl"/>
+        </module>
+
+        <!-- ===== 格式化管不到的禁令 ===== -->
+        <module name="RegexpSinglelineJava">
+            <!-- 结尾用 \b 而不是 \. ：否则 System.out::println 这种方法引用会漏掉 -->
+            <property name="format" value="System\.(out|err)\b"/>
+            <property name="message" value="禁止 System.out / System.err，请使用 SLF4J 日志"/>
+        </module>
+        <module name="RegexpSinglelineJava">
+            <property name="format" value="\.printStackTrace\(\)"/>
+            <property name="message" value="禁止 printStackTrace()，请使用日志并保留异常信息"/>
+        </module>
+        <module name="RegexpSinglelineJava">
+            <property name="format" value="@Autowired"/>
+            <property name="message" value="禁止 @Autowired 注入，请使用构造器注入（@AllArgsConstructor）"/>
+        </module>
+        <module name="RegexpSinglelineJava">
+            <property name="format" value="new (java\.util\.)?Date\(\)"/>
+            <property name="message" value="禁止 new Date()，请使用 java.time"/>
+        </module>
+
+        <!-- ===== 接口约定（见 CLAUDE.md） ===== -->
+
+        <!-- 只允许 GET / POST -->
+        <module name="RegexpSinglelineJava">
+            <property name="format" value="@(Put|Patch|Delete)Mapping\b"/>
+            <property name="message"
+                      value="本项目接口只允许 GET / POST，禁止 @PutMapping / @PatchMapping / @DeleteMapping"/>
+        </module>
+        <module name="RegexpSinglelineJava">
+            <property name="format" value="RequestMethod\.(PUT|PATCH|DELETE)\b"/>
+            <property name="message" value="本项目接口只允许 GET / POST，禁止 RequestMethod.PUT/PATCH/DELETE"/>
+        </module>
+
+        <!-- 分页参数必须叫 curPage / pageSize -->
+        <module name="RegexpSinglelineJava">
+            <property name="format" value="\bpageNumber\b"/>
+            <property name="message" value="分页参数必须使用 curPage，禁止 pageNumber（见 CLAUDE.md 接口约定）"/>
+        </module>
+        <module name="RegexpSinglelineJava">
+            <property name="format" value="\bpageNum\b|\bcurrentPage\b|\bpageIndex\b"/>
+            <property name="message" value="分页参数必须使用 curPage，禁止 pageNum / currentPage / pageIndex"/>
+        </module>
+
+        <!-- 路径必须 camelCase：@XxxMapping("...") 里不允许出现 - 或 _ -->
+        <module name="RegexpSinglelineJava">
+            <property name="format"
+                      value="@(Get|Post|Request)Mapping\(&quot;[^&quot;]*[-_][^&quot;]*&quot;"/>
+            <property name="message" value="接口路径必须是 camelCase，禁止 kebab-case / 下划线（见 CLAUDE.md 接口约定）"/>
+        </module>
+
+    </module>
+</module>

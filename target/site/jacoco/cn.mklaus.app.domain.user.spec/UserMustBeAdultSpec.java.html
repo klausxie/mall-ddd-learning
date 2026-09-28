@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserMustBeAdultSpec.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">mall</a> &gt; <a href="index.source.html" class="el_package">cn.mklaus.app.domain.user.spec</a> &gt; <span class="el_source">UserMustBeAdultSpec.java</span></div><h1>UserMustBeAdultSpec.java</h1><pre class="source lang-java linenums">package cn.mklaus.app.domain.user.spec;
+
+import cn.mklaus.app.common.exception.Violation;
+import cn.mklaus.app.common.spec.Spec;
+import cn.mklaus.app.domain.user.User;
+import cn.mklaus.app.domain.user.UserErrorCode;
+
+import java.util.Optional;
+
+/**
+ * 用户必须成年。该约束只在部分用例下成立（注册、下单），因此是规格而不是实体的不变量。
+ *
+ * @author klaus
+ * @since 2026/9/28
+ */
+<span class="fc" id="L16">public class UserMustBeAdultSpec implements Spec&lt;User&gt; {</span>
+
+    /**
+     * 成年年龄
+     */
+    public static final int ADULT_AGE = 18;
+
+    @Override
+    public Optional&lt;Violation&gt; violation(User user) {
+<span class="fc" id="L25">        Integer age = user.getAge();</span>
+<span class="fc bfc" id="L26" title="All 4 branches covered.">        if (age == null || age &lt; ADULT_AGE) {</span>
+<span class="fc" id="L27">            return Optional.of(Violation.of(UserErrorCode.USER_MUST_BE_ADULT, ADULT_AGE));</span>
+        }
+<span class="fc" id="L29">        return Optional.empty();</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Response.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">mall</a> &gt; <a href="index.source.html" class="el_package">cn.mklaus.app.common.model</a> &gt; <span class="el_source">Response.java</span></div><h1>Response.java</h1><pre class="source lang-java linenums">package cn.mklaus.app.common.model;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.Getter;
+import lombok.ToString;
+
+import java.io.Serializable;
+
+/**
+ * @author klausxie
+ * @since 2023/11/4
+ */
+@Getter
+@ToString
+public class Response&lt;T&gt; implements Serializable {
+
+    private static final String SUCCESS_MSG = &quot;ok&quot;;
+    private static final int SUCCESS_CODE = 0;
+    private static final int ERROR_CODE = 1;
+
+    private int code;
+    private String message;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private T data;
+
+    private Response() {
+    }
+
+    @JsonIgnore
+    public boolean isOk() {
+<span class="nc bnc" id="L32" title="All 2 branches missed.">        return code == SUCCESS_CODE;</span>
+    }
+
+    public static &lt;T&gt; Response&lt;T&gt; ok() {
+<span class="nc" id="L36">        Response&lt;T&gt; response = new Response&lt;&gt;();</span>
+<span class="nc" id="L37">        response.code = SUCCESS_CODE;</span>
+<span class="nc" id="L38">        response.message = SUCCESS_MSG;</span>
+<span class="nc" id="L39">        return response;</span>
+    }
+
+    public static &lt;T&gt; Response&lt;T&gt; ok(T data) {
+<span class="nc" id="L43">        Response&lt;T&gt; response = new Response&lt;&gt;();</span>
+<span class="nc" id="L44">        response.code = SUCCESS_CODE;</span>
+<span class="nc" id="L45">        response.message = SUCCESS_MSG;</span>
+<span class="nc" id="L46">        response.data = data;</span>
+<span class="nc" id="L47">        return response;</span>
+    }
+
+    public static &lt;T&gt; Response&lt;T&gt; error(String errMsg) {
+<span class="nc" id="L51">        return error(ERROR_CODE, errMsg);</span>
+    }
+
+    public static &lt;T&gt; Response&lt;T&gt; error(int errCode, String errMsg) {
+<span class="nc" id="L55">        Response&lt;T&gt; response = new Response&lt;&gt;();</span>
+<span class="nc" id="L56">        response.code = errCode;</span>
+<span class="nc" id="L57">        response.message = errMsg;</span>
+<span class="nc" id="L58">        return response;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

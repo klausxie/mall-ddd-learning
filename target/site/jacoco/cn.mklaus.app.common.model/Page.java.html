@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Page.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">mall</a> &gt; <a href="index.source.html" class="el_package">cn.mklaus.app.common.model</a> &gt; <span class="el_source">Page.java</span></div><h1>Page.java</h1><pre class="source lang-java linenums">package cn.mklaus.app.common.model;
+
+import lombok.Data;
+
+import java.util.List;
+
+/**
+ * @author klausxie
+ * @since 2023/8/20
+ */
+@Data
+public class Page&lt;T&gt; {
+
+    private Integer curPage;
+    private Integer pageSize;
+    private Long total;
+    private List&lt;T&gt; records;
+
+    /**
+     * 组装分页结果，保证四个字段一次性给全。
+     */
+    public static &lt;T&gt; Page&lt;T&gt; of(Integer curPage, Integer pageSize, long total, List&lt;T&gt; records) {
+<span class="nc" id="L23">        Page&lt;T&gt; page = new Page&lt;&gt;();</span>
+<span class="nc" id="L24">        page.curPage = curPage;</span>
+<span class="nc" id="L25">        page.pageSize = pageSize;</span>
+<span class="nc" id="L26">        page.total = total;</span>
+<span class="nc" id="L27">        page.records = records;</span>
+<span class="nc" id="L28">        return page;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

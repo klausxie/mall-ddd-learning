@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  收货地址持久化。列名与 resources/schema.sql 的 `address` 表一一对应。
+  列表与计数共用 addressFilter，避免两处条件写歪导致 total 与记录不匹配。
+-->
+<mapper namespace="cn.mklaus.app.domain.user.AddressMapper">
+
+    <resultMap id="addressResult" type="cn.mklaus.app.domain.user.Address">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="recipient" column="recipient"/>
+        <result property="phone" column="phone"/>
+        <result property="province" column="province"/>
+        <result property="city" column="city"/>
+        <result property="district" column="district"/>
+        <result property="detail" column="detail"/>
+    </resultMap>
+
+    <sql id="addressColumns">
+        id, user_id, recipient, phone, province, city, district, detail
+    </sql>
+
+    <sql id="addressFilter">
+        <where>
+            <if test="userId != null">
+                AND user_id = #{userId}
+            </if>
+        </where>
+    </sql>
+
+    <select id="getAddress" resultMap="addressResult">
+        SELECT
+        <include refid="addressColumns"/>
+        FROM address
+        WHERE id = #{addressId}
+    </select>
+
+    <insert id="saveAddress" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO address (user_id, recipient, phone, province, city, district, detail)
+        VALUES (#{userId}, #{recipient}, #{phone}, #{province}, #{city}, #{district}, #{detail})
+    </insert>
+
+    <update id="updateAddress">
+        UPDATE address
+        SET recipient = #{recipient},
+            phone     = #{phone},
+            province  = #{province},
+            city      = #{city},
+            district  = #{district},
+            detail    = #{detail}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 带上 user_id，避免越权删除别人的地址 -->
+    <delete id="removeAddress">
+        DELETE
+        FROM address
+        WHERE id = #{id}
+          AND user_id = #{userId}
+    </delete>
+
+    <select id="listAddress" resultMap="addressResult">
+        SELECT
+        <include refid="addressColumns"/>
+        FROM address
+        <include refid="addressFilter"/>
+        ORDER BY id DESC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="countAddress" resultType="long">
+        SELECT COUNT(*)
+        FROM address
+        <include refid="addressFilter"/>
+    </select>
+
+</mapper>

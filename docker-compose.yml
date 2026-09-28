@@ -1,0 +1,21 @@
+# 一条命令起本地依赖：docker compose up -d
+# 首次启动（数据卷为空）时会自动执行 schema.sql 与 seed.sql。
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mall-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: mall
+      MYSQL_USER: klaus
+      MYSQL_PASSWORD: klaus
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./src/main/resources/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./src/main/resources/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uklaus", "-pklaus" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10

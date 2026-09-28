@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SendCloudCaptchaService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">mall</a> &gt; <a href="index.source.html" class="el_package">cn.mklaus.app.infrastructure.captcha</a> &gt; <span class="el_source">SendCloudCaptchaService.java</span></div><h1>SendCloudCaptchaService.java</h1><pre class="source lang-java linenums">package cn.mklaus.app.infrastructure.captcha;
+
+import cn.mklaus.app.domain.common.CaptchaService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+/**
+ * 验证码服务的样例替身。
+ *
+ * &lt;p&gt;
+ * 真实实现（生成随机码、调短信网关、写 Redis 并 5 分钟过期）尚未接入，
+ * 这里通过 {@code mall.captcha.fixed-code} 配置一个固定验证码，让注册链路默认可跑通。
+ *
+ * &lt;p&gt;
+ * 该配置留空时一律校验失败——宁可把注册拦住，也不要误放行。
+ *
+ * @author klausxie
+ * @since 2023/9/3
+ */
+<span class="fc" id="L21">@Slf4j</span>
+@Component
+public class SendCloudCaptchaService implements CaptchaService {
+
+    private final String fixedCode;
+
+<span class="fc" id="L27">    public SendCloudCaptchaService(@Value(&quot;${mall.captcha.fixed-code:}&quot;) String fixedCode) {</span>
+<span class="fc" id="L28">        this.fixedCode = fixedCode;</span>
+<span class="fc" id="L29">    }</span>
+
+    @Override
+    public void sendCaptcha(String mobile) {
+<span class="nc" id="L33">        log.info(&quot;验证码发送尚未接入真实短信网关, mobile={}&quot;, mobile);</span>
+<span class="nc" id="L34">    }</span>
+
+    @Override
+    public boolean isCaptchaValidate(String mobile, String captcha) {
+<span class="fc bfc" id="L38" title="All 2 branches covered.">        if (fixedCode.isBlank()) {</span>
+<span class="fc" id="L39">            log.warn(&quot;mall.captcha.fixed-code 未配置，验证码校验一律失败, mobile={}&quot;, mobile);</span>
+<span class="fc" id="L40">            return false;</span>
+        }
+<span class="fc" id="L42">        return fixedCode.equals(captcha);</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

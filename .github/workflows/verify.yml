@@ -1,0 +1,51 @@
+name: verify
+
+# 与本地 `./mvnw verify` 完全一致的门槛，另外用 service container 起一个 MySQL，
+# 让真库测试（MapperSmokeTest / *ApiTest）也跑起来。
+on:
+  push:
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: mall
+          MYSQL_USER: klaus
+          MYSQL_PASSWORD: klaus
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uklaus -pklaus"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Init schema
+        run: mysql -h 127.0.0.1 -P 3306 -uklaus -pklaus mall < src/main/resources/schema.sql
+
+      # verify = spotless:check + checkstyle + ArchUnit + 单测；
+      # 真库测试默认跳过，靠 MALL_DB_PASSWORD 打开；数据源用环境变量覆盖 application.yaml。
+      - name: Verify
+        env:
+          SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/mall?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&useSSL=false&allowPublicKeyRetrieval=true
+          SPRING_DATASOURCE_USERNAME: klaus
+          SPRING_DATASOURCE_PASSWORD: klaus
+          MALL_DB_PASSWORD: klaus
+        # -Pcoverage-check：带真库测试跑覆盖率门槛（本地默认跳过真库测试，覆盖率会虚低）
+        run: ./mvnw -B -Pcoverage-check verify

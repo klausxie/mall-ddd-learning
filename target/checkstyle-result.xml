@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<checkstyle version="10.21.1">
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/configuration/GlobalExceptionHandler.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/Application.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/web/ProductController.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/web/AddressController.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/web/OperatorContextFilter.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/web/UserController.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/common/auth/Operator.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/common/auth/Context.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/common/spec/Specs.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/common/spec/Spec.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/common/model/Page.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/common/model/Response.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/common/model/Pageable.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/common/exception/ErrorCode.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/common/exception/MallException.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/common/exception/Violation.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/common/exception/ErrorCodeException.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/common/exception/CommonErrorCode.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/common/exception/Asserts.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/application/user/command/response/UserCreateResponse.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/application/user/command/assembler/UserAssembler.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/application/user/command/UserCmdServiceImpl.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/application/user/command/UserCmdService.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/application/user/command/request/AddressCreateRequest.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/application/user/command/request/AddressRemoveRequest.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/application/user/command/request/AddressUpdateRequest.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/application/user/command/request/UserCreateRequest.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/application/user/query/response/AddressInfo.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/application/user/query/response/UserInfo.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/application/user/query/UserQueryServiceImpl.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/application/user/query/request/AddressPageRequest.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/application/user/query/UserQueryService.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/application/product/command/assembler/ProductAssembler.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/application/product/command/ProductCmdService.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/application/product/command/ProductCmdServiceImpl.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/application/product/command/request/ProductCreateRequest.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/application/product/command/request/ProductRemoveRequest.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/application/product/command/request/ProductOnSaleRequest.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/application/product/command/request/ProductUpdateRequest.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/application/product/command/request/ProductOffSaleRequest.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/application/product/query/ProductQueryServiceImpl.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/application/product/query/response/ProductInfo.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/application/product/query/request/ProductPageRequest.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/application/product/query/ProductQueryService.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/infrastructure/security/Pbkdf2PasswordHasher.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/infrastructure/captcha/SendCloudCaptchaService.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/infrastructure/event/RocketmqEventPublisher.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/domain/user/UserErrorCode.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/domain/user/UserValidator.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/domain/user/spec/UserMustBeAdultSpec.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/domain/user/User.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/domain/user/Address.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/domain/user/UserMapper.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/domain/user/points/RegistrationPointsPolicy.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/domain/user/query/AddressPageCondition.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/domain/user/AddressMapper.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/domain/user/UserCreatedEvent.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/domain/product/Product.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/domain/product/ProductService.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/domain/product/ProductErrorCode.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/domain/product/ProductMapper.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/domain/product/ProductStatus.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/domain/product/query/condition/ProductPageCondition.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/domain/product/ProductValidator.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/domain/common/CaptchaService.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/domain/common/PasswordHasher.java">
+</file>
+<file name="/Users/klaus/work/mall/src/main/java/cn/mklaus/app/domain/common/EventPublisher.java">
+</file>
+<file name="/Users/klaus/work/mall/src/test/java/cn/mklaus/app/web/OpenApiDocsTest.java">
+</file>
+<file name="/Users/klaus/work/mall/src/test/java/cn/mklaus/app/web/ProductApiTest.java">
+</file>
+<file name="/Users/klaus/work/mall/src/test/java/cn/mklaus/app/web/UserRegisterApiTest.java">
+</file>
+<file name="/Users/klaus/work/mall/src/test/java/cn/mklaus/app/web/AddressApiTest.java">
+</file>
+<file name="/Users/klaus/work/mall/src/test/java/cn/mklaus/app/ArchitectureTest.java">
+</file>
+<file name="/Users/klaus/work/mall/src/test/java/cn/mklaus/app/common/auth/ContextTest.java">
+</file>
+<file name="/Users/klaus/work/mall/src/test/java/cn/mklaus/app/common/spec/SpecTest.java">
+</file>
+<file name="/Users/klaus/work/mall/src/test/java/cn/mklaus/app/common/spec/SpecsTest.java">
+</file>
+<file name="/Users/klaus/work/mall/src/test/java/cn/mklaus/app/common/model/PageableTest.java">
+</file>
+<file name="/Users/klaus/work/mall/src/test/java/cn/mklaus/app/ApplicationContextTest.java">
+</file>
+<file name="/Users/klaus/work/mall/src/test/java/cn/mklaus/app/infrastructure/security/Pbkdf2PasswordHasherTest.java">
+</file>
+<file name="/Users/klaus/work/mall/src/test/java/cn/mklaus/app/infrastructure/captcha/SendCloudCaptchaServiceTest.java">
+</file>
+<file name="/Users/klaus/work/mall/src/test/java/cn/mklaus/app/domain/user/UserValidatorTest.java">
+</file>
+<file name="/Users/klaus/work/mall/src/test/java/cn/mklaus/app/domain/user/spec/UserMustBeAdultSpecTest.java">
+</file>
+<file name="/Users/klaus/work/mall/src/test/java/cn/mklaus/app/domain/user/AddressTest.java">
+</file>
+<file name="/Users/klaus/work/mall/src/test/java/cn/mklaus/app/domain/user/points/RegistrationPointsPolicyTest.java">
+</file>
+<file name="/Users/klaus/work/mall/src/test/java/cn/mklaus/app/domain/product/ProductTest.java">
+</file>
+<file name="/Users/klaus/work/mall/src/test/java/cn/mklaus/app/domain/MapperSmokeTest.java">
+</file>
+<file name="/Users/klaus/work/mall/src/test/java/cn/mklaus/app/MapperStatementsTest.java">
+</file>
+</checkstyle>
