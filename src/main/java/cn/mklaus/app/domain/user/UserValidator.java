@@ -1,7 +1,9 @@
 package cn.mklaus.app.domain.user;
 
 import cn.mklaus.app.common.exception.Asserts;
+import cn.mklaus.app.common.exception.ErrorCodeException;
 import cn.mklaus.app.domain.common.CaptchaService;
+import cn.mklaus.app.domain.common.PasswordHasher;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -25,6 +27,7 @@ public class UserValidator {
 
     private final UserMapper userMapper;
     private final CaptchaService captchaService;
+    private final PasswordHasher passwordHasher;
 
     /**
      * 注册前的输入校验：验证码、手机号唯一性、密码格式。
@@ -34,6 +37,23 @@ public class UserValidator {
         // 格式校验在 Mobile 的构造器里，这里只管唯一性
         assertMobileCanUse(new Mobile(mobile));
         assertPasswordValidate(password);
+    }
+
+    /**
+     * 登录校验：手机号与密码必须同时匹配，通过后把实体交回调用方。
+     *
+     * <p>
+     * 两条刻意的设计：
+     *
+     * <ul>
+     * <li>**手机号不存在与密码错误共用一个错误码**，否则接口就成了账号枚举器；</li>
+     * <li>**返回实体而不是只做断言**，免得签发令牌的调用方为了拿 id 再查一次库。</li>
+     * </ul>
+     */
+    public User authenticate(String mobile, String rawPassword) {
+        return userMapper.getUserByMobile(new Mobile(mobile))
+            .filter(user -> passwordHasher.matches(rawPassword, user.getPassword()))
+            .orElseThrow(() -> new ErrorCodeException(UserErrorCode.LOGIN_FAILED));
     }
 
     public void assertMobileCanUse(Mobile mobile) {

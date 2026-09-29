@@ -55,7 +55,12 @@ public enum UserErrorCode implements ErrorCode {
     /**
      * 收件人不能为空
      */
-    RECIPIENT_IS_REQUIRED(50009, "收件人不能为空")
+    RECIPIENT_IS_REQUIRED(50009, "收件人不能为空"),
+
+    /**
+     * 登录失败（手机号不存在或密码不正确，刻意不区分，避免账号枚举）
+     */
+    LOGIN_FAILED(50010, "手机号或密码不正确")
 
     ;
 

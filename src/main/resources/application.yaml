@@ -21,9 +21,22 @@ mybatis-plus:
   # 值对象与数据库列之间的 TypeHandler 所在包（见 infrastructure/persistence）
   type-handlers-package: cn.mklaus.app.infrastructure.persistence
 
-mall:
+# 应用配置统一挂在固定的 `app.*` 前缀下（见 CLAUDE.md）：前缀与 APP_AUTH_* 环境变量
+# 都不随项目改名，改名脚本也就不用去改 Java / 文档里的 @Value 引用。
+app:
   captcha:
     # 样例替身：固定验证码，便于直接 curl 注册。留空则验证码校验一律失败（宁可拦住也不误放行）
     # 真实项目必须删掉这一项
     fixed-code: 123456
+  auth:
+    # 样例替身：本地固定签名密钥，保证开箱可跑。真实项目必须换成环境变量注入（APP_AUTH_TOKEN_SECRET）
+    # 留空则登录直接失败（宁可拦住，也不要用可预测的密钥放行）
+    token-secret: ${APP_AUTH_TOKEN_SECRET:local-dev-secret}
+    # 令牌有效期，Spring 的 Duration 格式（7d / 12h）；到期后客户端重新登录
+    token-ttl: 7d
+    # 令牌 Cookie（浏览器 / 后台场景）：HttpOnly + SameSite=Lax 是写死的，见 TokenCookie
+    # 固定 app_token：Cookie 不区分端口，同域下跑多个项目（比如都在 localhost）时改成各自的名字，免得互相顶掉
+    cookie-name: app_token
+    # 生产走 HTTPS 时必须打开；本地 http 调试保持 false，否则浏览器不会回传这张 Cookie
+    cookie-secure: false
 

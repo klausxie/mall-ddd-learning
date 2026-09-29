@@ -2,6 +2,7 @@ package cn.mklaus.app.domain.user;
 
 import cn.mklaus.app.common.exception.ErrorCodeException;
 import cn.mklaus.app.domain.common.CaptchaService;
+import cn.mklaus.app.domain.common.PasswordHasher;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
@@ -24,7 +25,8 @@ class UserValidatorTest {
 
     private final UserMapper userMapper = mock(UserMapper.class);
     private final CaptchaService captchaService = mock(CaptchaService.class);
-    private final UserValidator validator = new UserValidator(userMapper, captchaService);
+    private final PasswordHasher passwordHasher = mock(PasswordHasher.class);
+    private final UserValidator validator = new UserValidator(userMapper, captchaService, passwordHasher);
 
     @Test
     void shouldRejectIllegalMobileFormatWhenBuildingValueObject() {
@@ -71,9 +73,39 @@ class UserValidatorTest {
         assertDoesNotThrow(() -> validator.assertCanRegister(MOBILE, PASSWORD, CAPTCHA));
     }
 
+    @Test
+    void shouldReturnUserWhenCredentialsMatch() {
+        User user = registeredUser("pbkdf2$600000$c2FsdA==$aGFzaA==");
+        when(userMapper.getUserByMobile(new Mobile(MOBILE))).thenReturn(Optional.of(user));
+        when(passwordHasher.matches(PASSWORD, user.getPassword())).thenReturn(true);
+
+        assertEquals(user, validator.authenticate(MOBILE, PASSWORD));
+    }
+
+    /**
+     * 手机号不存在与密码错误必须给出同一个错误码，否则接口会变成账号枚举器。
+     */
+    @Test
+    void shouldRejectUnknownMobileAndWrongPasswordWithSameErrorCode() {
+        when(userMapper.getUserByMobile(new Mobile(MOBILE))).thenReturn(Optional.empty());
+        assertCode(UserErrorCode.LOGIN_FAILED, () -> validator.authenticate(MOBILE, PASSWORD));
+
+        User user = registeredUser("stored-hash");
+        when(userMapper.getUserByMobile(new Mobile(MOBILE))).thenReturn(Optional.of(user));
+        when(passwordHasher.matches(PASSWORD, "stored-hash")).thenReturn(false);
+        assertCode(UserErrorCode.LOGIN_FAILED, () -> validator.authenticate(MOBILE, PASSWORD));
+    }
+
+    private static User registeredUser(String encodedPassword) {
+        User user = new User();
+        user.setId(9L);
+        user.setMobile(new Mobile(MOBILE));
+        user.setPassword(encodedPassword);
+        return user;
+    }
+
     private static void assertCode(UserErrorCode expected, Runnable action) {
         ErrorCodeException exception = assertThrows(ErrorCodeException.class, action::run);
         assertEquals(expected, exception.getErrorCode());
     }
-
 }

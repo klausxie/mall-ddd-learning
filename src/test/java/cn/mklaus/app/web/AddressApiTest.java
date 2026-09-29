@@ -1,5 +1,6 @@
 package cn.mklaus.app.web;
 
+import cn.mklaus.app.common.auth.TokenCodec;
 import cn.mklaus.app.domain.user.Mobile;
 import cn.mklaus.app.domain.user.User;
 import cn.mklaus.app.domain.user.UserMapper;
@@ -20,10 +21,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * 地址接口端到端：鉴权替身（X-Operator-Id）→ 归属校验 → 增删改查 + 分页。
+ * 地址接口端到端：登录令牌 → 解析出操作人 → 归属校验 → 增删改查 + 分页。
  *
  * <p>
- * 需要真实数据库，数据源配了密码就跑，没配则跳过（见 {@link EnabledIfDatabaseConfigured}）：
+ * 需要真实数据库，数据源配了密码就跑，没配则跳过（见 {@link RequiresRealDatabase}）：
  *
  * <pre>
  * MALL_DB_PASSWORD=xxx ./mvnw test -Dtest=AddressApiTest
@@ -39,16 +40,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RequiresRealDatabase
 class AddressApiTest {
 
-    private static final String OPERATOR_HEADER = "X-Operator-Id";
+    private static final String AUTHORIZATION_HEADER = "Authorization";
 
     private final MockMvc mockMvc;
     private final UserMapper userMapper;
+    private final TokenCodec tokenCodec;
 
-    private long operatorId;
+    private String authorization;
 
-    AddressApiTest(MockMvc mockMvc, UserMapper userMapper) {
+    AddressApiTest(MockMvc mockMvc, UserMapper userMapper, TokenCodec tokenCodec) {
         this.mockMvc = mockMvc;
         this.userMapper = userMapper;
+        this.tokenCodec = tokenCodec;
     }
 
     @BeforeEach
@@ -58,13 +61,13 @@ class AddressApiTest {
         user.setPassword("pbkdf2$600000$c2FsdA==$aGFzaA==");
         user.setAge(30);
         userMapper.saveUser(user);
-        operatorId = user.getId();
+        authorization = "Bearer " + tokenCodec.issue(user.getId());
     }
 
     @Test
     void shouldCreatePageUpdateAndRemoveAddress() throws Exception {
         String created = mockMvc.perform(post("/address/create")
-            .header(OPERATOR_HEADER, operatorId)
+            .header(AUTHORIZATION_HEADER, authorization)
             .contentType(MediaType.APPLICATION_JSON)
             .content(addressBody(null, "收件人", "科技园 1 号")))
             .andExpect(status().isOk())
@@ -75,7 +78,7 @@ class AddressApiTest {
             .getContentAsString();
         long addressId = ((Number) JsonPath.read(created, "$.data.id")).longValue();
 
-        mockMvc.perform(get("/address/page").header(OPERATOR_HEADER, operatorId))
+        mockMvc.perform(get("/address/page").header(AUTHORIZATION_HEADER, authorization))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.code").value(0))
             .andExpect(jsonPath("$.data.curPage").value(1))
@@ -84,29 +87,29 @@ class AddressApiTest {
             .andExpect(jsonPath("$.data.records[0].recipient").value("收件人"));
 
         mockMvc.perform(post("/address/update")
-            .header(OPERATOR_HEADER, operatorId)
+            .header(AUTHORIZATION_HEADER, authorization)
             .contentType(MediaType.APPLICATION_JSON)
             .content(addressBody(addressId, "新收件人", "科技园 2 号")))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.code").value(0));
 
-        mockMvc.perform(get("/address/page").header(OPERATOR_HEADER, operatorId))
+        mockMvc.perform(get("/address/page").header(AUTHORIZATION_HEADER, authorization))
             .andExpect(jsonPath("$.data.records[0].recipient").value("新收件人"))
             .andExpect(jsonPath("$.data.records[0].detail").value("科技园 2 号"));
 
         mockMvc.perform(post("/address/remove")
-            .header(OPERATOR_HEADER, operatorId)
+            .header(AUTHORIZATION_HEADER, authorization)
             .contentType(MediaType.APPLICATION_JSON)
             .content("{\"addressId\":" + addressId + "}"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.code").value(0));
 
-        mockMvc.perform(get("/address/page").header(OPERATOR_HEADER, operatorId))
+        mockMvc.perform(get("/address/page").header(AUTHORIZATION_HEADER, authorization))
             .andExpect(jsonPath("$.data.total").value(0));
     }
 
     @Test
-    void shouldReportNotLoggedInWhenOperatorHeaderMissing() throws Exception {
+    void shouldReportNotLoggedInWhenTokenMissing() throws Exception {
         mockMvc.perform(get("/address/page"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.code").value(40005))
@@ -116,7 +119,7 @@ class AddressApiTest {
     @Test
     void shouldReportAddressNotExistsForUnknownAddress() throws Exception {
         mockMvc.perform(post("/address/remove")
-            .header(OPERATOR_HEADER, operatorId)
+            .header(AUTHORIZATION_HEADER, authorization)
             .contentType(MediaType.APPLICATION_JSON)
             .content("{\"addressId\":-1}"))
             .andExpect(status().isOk())

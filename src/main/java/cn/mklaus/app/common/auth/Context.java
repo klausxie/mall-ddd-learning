@@ -7,8 +7,8 @@ import cn.mklaus.app.common.exception.ErrorCodeException;
  * 当前操作人上下文。
  *
  * <p>
- * 真实项目里由鉴权组件解析 token / session 后写入；样例里由 web 层的
- * {@code OperatorContextFilter} 按 {@code X-Operator-Id} 请求头写入。
+ * 由 web 层的 {@code OperatorContextFilter} 解析 {@code Authorization: Bearer <token>} 后写入；
+ * 令牌怎么签名在 {@code infrastructure/security/HmacTokenCodec}。
  *
  * <p>
  * 未登录时直接报错，而不是返回一个 id 为 null 的空对象——后者会在下游变成难以定位的 NPE。
