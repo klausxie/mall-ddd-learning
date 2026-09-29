@@ -88,7 +88,7 @@ class GuardrailsTest {
         assertThresholdAtLeast(pom, "jacoco.domain.line.coverage.min", 0.70, "domain 覆盖率地板");
         assertThresholdAtLeast(pom, "jacoco.line.coverage.min", 0.80, "全局覆盖率门槛");
 
-        String workflow = read(".github/workflows/verify.yml");
+        String workflow = read("../.github/workflows/verify.yml");
         assertContains(workflow, "-Pcoverage-check", "CI 不再跑覆盖率门槛");
         for (String flag : List.of("-Dspotless.check.skip=false", "-Dcheckstyle.skip=false")) {
             assertContains(workflow, flag,
@@ -98,7 +98,7 @@ class GuardrailsTest {
 
     @Test
     void credentialsShouldNotBeCommittableOrHardcoded() {
-        assertContains(read(".gitignore"), "application-local.yaml",
+        assertContains(read("../.gitignore"), "application-local.yaml",
             ".gitignore 不再忽略 application-local.yaml：本地凭证文件会被提交进仓库");
 
         for (String config : List.of("src/main/resources/application.yaml",
@@ -167,7 +167,7 @@ class GuardrailsTest {
     private static String read(String relativePath) {
         Path path = Path.of(relativePath);
         assertTrue(Files.exists(path), () -> "护栏自检找不到 " + relativePath
-            + "：请在项目根目录下用 ./mvnw verify 运行（当前目录 " + Path.of("").toAbsolutePath() + "）");
+            + "：请在 backend/ 目录下用 ./mvnw verify 运行（当前目录 " + Path.of("").toAbsolutePath() + "）");
         try {
             return Files.readString(path, StandardCharsets.UTF_8);
         } catch (IOException e) {
