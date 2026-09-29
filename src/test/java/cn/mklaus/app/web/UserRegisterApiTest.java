@@ -25,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * {@link EnabledIfDatabaseConfigured}）：
  *
  * <pre>
- * MALL_DB_PASSWORD=xxx ./mvnw test -Dtest=UserRegisterApiTest
+ * APP_DB_PASSWORD=xxx ./mvnw test -Dtest=UserRegisterApiTest
  * </pre>
  *
  * <p>

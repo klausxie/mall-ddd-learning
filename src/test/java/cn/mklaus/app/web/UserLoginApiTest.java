@@ -35,7 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * 需要真实数据库，数据源配了密码就跑，没配则跳过（见 {@link RequiresRealDatabase}）：
  *
  * <pre>
- * MALL_DB_PASSWORD=xxx ./mvnw test -Dtest=UserLoginApiTest
+ * APP_DB_PASSWORD=xxx ./mvnw test -Dtest=UserLoginApiTest
  * </pre>
  *
  * <p>

@@ -71,7 +71,7 @@ fi
 echo
 echo "== 真库置备级别（本地判定，近似 support/RealDatabaseProvisioner）=="
 tier=""
-for key in MALL_DB_URL MALL_DB_USERNAME MALL_DB_PASSWORD SPRING_DATASOURCE_URL SPRING_DATASOURCE_USERNAME SPRING_DATASOURCE_PASSWORD; do
+for key in APP_DB_URL APP_DB_USERNAME APP_DB_PASSWORD SPRING_DATASOURCE_URL SPRING_DATASOURCE_USERNAME SPRING_DATASOURCE_PASSWORD; do
     if [ -n "${!key:-}" ]; then tier="① 显式配置（环境变量 $key）"; break; fi
 done
 if [ -z "$tier" ]; then

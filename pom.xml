@@ -288,7 +288,7 @@
     <profiles>
         <!--
           全局覆盖率门槛：只在带真库测试的跑法里启用（本地跳过真库测试时全局比例天然偏低）。
-          用法：MALL_DB_USERNAME=klaus MALL_DB_PASSWORD=klaus ./mvnw -Pcoverage-check verify
+          用法：APP_DB_USERNAME=klaus APP_DB_PASSWORD=klaus ./mvnw -Pcoverage-check verify
         -->
         <profile>
             <id>coverage-check</id>

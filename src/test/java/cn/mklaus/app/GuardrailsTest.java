@@ -112,7 +112,7 @@ class GuardrailsTest {
                 assertTrue(value.startsWith("${") || value.startsWith("<") || value.startsWith("'<")
                     || value.startsWith("\"<"),
                     config + " 里的 password 是字面量而不是占位符（" + value.length()
-                        + " 字符）。凭证一旦提交进仓库就删不掉、只能换——请改成 ${MALL_DB_PASSWORD:} 这类占位符");
+                        + " 字符）。凭证一旦提交进仓库就删不掉、只能换——请改成 ${APP_DB_PASSWORD:} 这类占位符");
             }
         }
     }

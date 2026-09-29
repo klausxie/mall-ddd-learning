@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #
-# 把本模板初始化成一个新项目：改包名 / 坐标 / 配置前缀。
+# 把本模板初始化成一个新项目：改包名 / 坐标 / 数据库名。
 #
 # 用法：
-#   scripts/init.sh <groupId> <artifactId> <basePackage> [configPrefix] [--yes] [--force] [--reset-git]
+#   scripts/init.sh <groupId> <artifactId> <basePackage> [dbName] [--yes] [--force] [--reset-git]
 #
 # 示例：
 #   scripts/init.sh cn.acme order-service cn.acme.order
@@ -13,7 +13,9 @@
 #   1. 只处理 git 跟踪的文件——与 GitHub "Use this template" 的行为一致，
 #      所以 target/、application-local.yaml（含真实凭证）这类文件不会被带进新项目；
 #   2. 默认要求工作区干净并要一次人工确认，避免有人直接在模板仓库里跑它把模板改掉；
-#   3. 顺手把样例标识符一起改掉：MALL_DB_* 环境变量、配置前缀、文档标题。
+#   3. 顺手把样例标识符一起改掉：数据库名、文档标题。
+#      配置项前缀固定 `app.*`、环境变量固定 `APP_DB_*` / `APP_AUTH_*`（见 CLAUDE.md），都不随项目名变化，
+#      所以这里也不用去改 Java / 文档里的 @Value 引用，更不用去改部署脚本里的环境变量名。
 #
 # 它不会替你做的事：删减业务样例、写业务代码、commit。见 TEMPLATE.md 的"初始化后清单"。
 set -euo pipefail
@@ -21,12 +23,11 @@ set -euo pipefail
 OLD_GROUP="cn.mklaus"
 OLD_BASE="cn.mklaus.app"
 OLD_ARTIFACT="mall"
-OLD_CONFIG_PREFIX="mall"
 
 die() { printf '\033[31m错误：%s\033[0m\n' "$*" >&2; exit 1; }
 info() { printf '\033[36m==> %s\033[0m\n' "$*"; }
 
-usage() { sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,19p' "$0" | sed 's/^# \{0,1\}//'; }
 
 ARGS=()
 YES=0
@@ -54,13 +55,12 @@ done
 NEW_GROUP="${ARGS[0]}"
 NEW_ARTIFACT="${ARGS[1]}"
 NEW_BASE="${ARGS[2]}"
-NEW_PREFIX="${ARGS[3]:-$(printf '%s' "$NEW_ARTIFACT" | cut -d- -f1 | tr -cd 'a-z0-9')}"
-ENV_PREFIX="$(printf '%s' "$NEW_ARTIFACT" | tr '[:lower:]-.' '[:upper:]__')"
+NEW_DB_NAME="${ARGS[3]:-$(printf '%s' "$NEW_ARTIFACT" | cut -d- -f1 | tr -cd 'a-z0-9')}"
 
 [[ "$NEW_BASE" =~ ^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$ ]] || die "basePackage 不合法：$NEW_BASE"
 [[ "$NEW_GROUP" =~ ^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$ ]] || die "groupId 不合法：$NEW_GROUP"
 [[ "$NEW_ARTIFACT" =~ ^[a-z][a-z0-9-]*$ ]] || die "artifactId 不合法：$NEW_ARTIFACT"
-[[ "$NEW_PREFIX" =~ ^[a-z][a-z0-9]*$ ]] || die "configPrefix 不合法：$NEW_PREFIX"
+[[ "$NEW_DB_NAME" =~ ^[a-z][a-z0-9]*$ ]] || die "数据库名不合法：$NEW_DB_NAME"
 [ "$NEW_BASE" != "$OLD_BASE" ] || die "basePackage 与模板相同，没什么可初始化的"
 
 cd "$(dirname "$0")/.."
@@ -76,8 +76,9 @@ cat <<EOF
   groupId        : $OLD_GROUP -> $NEW_GROUP
   artifactId     : $OLD_ARTIFACT -> $NEW_ARTIFACT
   基础包         : $OLD_BASE -> $NEW_BASE
-  配置前缀       : $OLD_CONFIG_PREFIX -> $NEW_PREFIX
-  环境变量前缀   : MALL_DB_ -> ${ENV_PREFIX}_DB_
+  数据库名       : $OLD_ARTIFACT -> $NEW_DB_NAME
+  配置前缀       : app（固定，不改）
+  环境变量       : APP_DB_* / APP_AUTH_*（固定，不改）
   重置 git 历史  : $([ "$RESET_GIT" -eq 1 ] && echo 是 || echo 否)
 EOF
 
@@ -113,27 +114,25 @@ for root in src/main/java src/test/java; do
     fi
 done
 
-info "2/6 替换包名、坐标与环境变量前缀"
+info "2/6 替换包名与坐标"
 # 必须**先**替换斜杠形式：replace_everywhere 用的是 sed 正则，点号会匹配任意字符，
 # 于是 "cn.mklaus.app" 这一遍会把 "cn/mklaus/app" 也一起吃掉，替换成点号形式，
 # 让文档/脚本里的路径引用指向不存在的目录（而且自检看不出问题，因为 mklaus 已经没了）。
 replace_everywhere "$OLD_PATH" "$NEW_PATH"
 replace_everywhere "$OLD_BASE" "$NEW_BASE"
 replace_everywhere "$OLD_GROUP" "$NEW_GROUP"
-replace_everywhere "MALL_DB_" "${ENV_PREFIX}_DB_"
 
 info "3/6 替换 pom / compose / 配置里的项目标识"
 "${SED_INPLACE[@]}" "s|<artifactId>$OLD_ARTIFACT</artifactId>|<artifactId>$NEW_ARTIFACT</artifactId>|" pom.xml
 [ -f docker-compose.yml ] && "${SED_INPLACE[@]}" \
     -e "s|container_name: $OLD_ARTIFACT-mysql|container_name: $NEW_ARTIFACT-mysql|" \
-    -e "s|MYSQL_DATABASE: $OLD_ARTIFACT|MYSQL_DATABASE: $NEW_PREFIX|" docker-compose.yml
+    -e "s|MYSQL_DATABASE: $OLD_ARTIFACT|MYSQL_DATABASE: $NEW_DB_NAME|" docker-compose.yml
+# 配置项前缀固定是 `app.*`，这里只改数据库名（compose 建的库名 + JDBC URL 里的库名）。
 for file in src/main/resources/application.yaml src/main/resources/application-local.yaml.example .github/workflows/verify.yml; do
     [ -f "$file" ] || continue
     "${SED_INPLACE[@]}" \
-        -e "s|/$OLD_ARTIFACT?|/$NEW_PREFIX?|" \
-        -e "s|^$OLD_CONFIG_PREFIX:|$NEW_PREFIX:|" \
-        -e "s|$OLD_CONFIG_PREFIX\.captcha|$NEW_PREFIX.captcha|" \
-        -e "s|MYSQL_DATABASE: $OLD_ARTIFACT|MYSQL_DATABASE: $NEW_PREFIX|" "$file"
+        -e "s|/$OLD_ARTIFACT?|/$NEW_DB_NAME?|" \
+        -e "s|MYSQL_DATABASE: $OLD_ARTIFACT|MYSQL_DATABASE: $NEW_DB_NAME|" "$file"
 done
 
 info "4/6 替换文档里的项目名"
@@ -144,8 +143,7 @@ for file in README.md CLAUDE.md AGENTS.md ARCHITECTURE.md TEMPLATE.md; do
     "${SED_INPLACE[@]}" \
         -e "s|^# ${OLD_ARTIFACT}|# ${NEW_ARTIFACT}|" \
         -e "s|（${OLD_ARTIFACT}）|（${NEW_ARTIFACT}）|g" \
-        -e "s|${OLD_ARTIFACT} 项目|${NEW_ARTIFACT} 项目|g" \
-        -e "s|${OLD_CONFIG_PREFIX}\.captcha|${NEW_PREFIX}.captcha|g" "$file"
+        -e "s|${OLD_ARTIFACT} 项目|${NEW_ARTIFACT} 项目|g" "$file"
 done
 
 info "5/6 清理空目录"
@@ -155,7 +153,7 @@ info "6/6 自检：确认没有旧标识残留"
 # 这一步是给"改名靠记忆必漏"兜底的：漏了就报错，而不是等编译/运行时才发现。
 # 排除脚本自己（它的常量里当然有旧标识）。
 LEFTOVERS="$(git ls-files | grep -v '^scripts/init.sh$' | xargs grep -lI \
-    -e "$OLD_BASE" -e "$OLD_PATH" -e "$OLD_GROUP" -e "MALL_DB_" 2>/dev/null || true)"
+    -e "$OLD_BASE" -e "$OLD_PATH" -e "$OLD_GROUP" 2>/dev/null || true)"
 if [ -n "$LEFTOVERS" ]; then
     printf '\033[31m以下文件里仍有旧标识，请手工确认（改名不完整会让新项目一开始就是坏的）：\033[0m\n' >&2
     printf '%s\n' "$LEFTOVERS" >&2
@@ -174,7 +172,7 @@ cat <<EOF
 初始化完成。接下来：
 
   1. ./mvnw spotless:apply && ./mvnw clean verify     # 骨架必须是绿的
-  2. docker compose up -d && export ${ENV_PREFIX}_DB_PASSWORD=klaus
+  2. docker compose up -d && export APP_DB_PASSWORD=klaus
   3. 读 TEMPLATE.md 的"初始化后清单"，删掉用不上的样例并确认替身配置
   4. $([ "$RESET_GIT" -eq 1 ] && echo "git commit -m 'chore: 从模板初始化'" || echo "确认无误后提交")
 

@@ -45,7 +45,7 @@ jobs:
           SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/mall?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&useSSL=false&allowPublicKeyRetrieval=true
           SPRING_DATASOURCE_USERNAME: klaus
           SPRING_DATASOURCE_PASSWORD: klaus
-          MALL_DB_PASSWORD: klaus
+          APP_DB_PASSWORD: klaus
         # -Pcoverage-check：带真库测试跑覆盖率门槛（本地默认跳过真库测试，覆盖率会虚低）
         # 显式传 -D....skip=false：即便有人在 pom.xml 里把检查设成 skip，CI 也会照跑。
         # 与 GuardrailsTest 一外一内：那个测试查"配置没被改弱"，这里保证"就算改了也照样执行"。

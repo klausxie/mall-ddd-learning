@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * 数据源配了密码就跑，没配则跳过（见 {@link EnabledIfDatabaseConfigured}）：
  *
  * <pre>
- * MALL_DB_PASSWORD=xxx ./mvnw test -Dtest=MapperSmokeTest
+ * APP_DB_PASSWORD=xxx ./mvnw test -Dtest=MapperSmokeTest
  * </pre>
  *
  * <p>

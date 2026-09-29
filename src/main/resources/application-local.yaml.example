@@ -14,11 +14,11 @@ spring:
     username: klaus
     password: '<你的密码>'
 
-mall:
+app:
   captcha:
     # 本地固定验证码，便于直接 curl 注册
     fixed-code: 123456
 
-# 填了本文件（或用 MALL_DB_* 环境变量）就走你这份库——真库测试置备的第一级：
+# 填了本文件（或用 APP_DB_* 环境变量）就走你这份库——真库测试置备的第一级：
 #   ./mvnw clean verify -Pcoverage-check -Dspring.profiles.active=local
 # 什么都不配时，测试会自动起一个 mysql:8.0 容器；本机没有 Docker 则降级到 H2 快速通道。

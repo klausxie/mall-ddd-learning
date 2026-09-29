@@ -21,7 +21,7 @@ import java.util.Map;
  * 给真库测试置备数据源，三级降级：
  *
  * <ol>
- * <li>**显式配置**（环境变量 {@code MALL_DB_*} / {@code SPRING_DATASOURCE_*}，或激活 profile 的
+ * <li>**显式配置**（环境变量 {@code APP_DB_*} / {@code SPRING_DATASOURCE_*}，或激活 profile 的
  * {@code application-<profile>.yaml} 里填了密码）→ 用它，什么都不做；</li>
  * <li>否则 **Docker 可用** → 起一个 {@code mysql:8.0} 容器（整个 JVM 共用一个，由 Testcontainers 回收）；</li>
  * <li>否则 **H2 的 MySQL 兼容模式**快速通道。</li>
@@ -41,10 +41,10 @@ import java.util.Map;
 @Slf4j
 final class RealDatabaseProvisioner {
 
-    private static final String H2_URL = "jdbc:h2:mem:mall;MODE=MySQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE;DB_CLOSE_DELAY=-1";
+    private static final String H2_URL = "jdbc:h2:mem:app;MODE=MySQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE;DB_CLOSE_DELAY=-1";
 
     /** 显式配置的判据：这些环境变量 / 系统属性任意一个非空。 */
-    private static final List<String> EXPLICIT_KEYS = List.of("MALL_DB_URL", "MALL_DB_USERNAME", "MALL_DB_PASSWORD",
+    private static final List<String> EXPLICIT_KEYS = List.of("APP_DB_URL", "APP_DB_USERNAME", "APP_DB_PASSWORD",
         "SPRING_DATASOURCE_URL", "SPRING_DATASOURCE_USERNAME", "SPRING_DATASOURCE_PASSWORD");
 
     private static final String ACTIVE_PROFILES = "spring.profiles.active";
@@ -119,7 +119,7 @@ final class RealDatabaseProvisioner {
 
     private static synchronized MySQLContainer startContainer() {
         if (container == null) {
-            container = new MySQLContainer("mysql:8.0").withDatabaseName("mall").withUsername("klaus")
+            container = new MySQLContainer("mysql:8.0").withDatabaseName("app").withUsername("klaus")
                 .withPassword("klaus")
                 // 默认不生效：要设 TESTCONTAINERS_REUSE_ENABLE=true（或 ~/.testcontainers.properties 里的
                 // testcontainers.reuse.enable=true）。开启后跨轮复用容器，省掉每次约 7 秒的启动；
