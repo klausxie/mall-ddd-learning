@@ -1,0 +1,32 @@
+package cn.mklaus.app.probe;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.DeleteMapping;
+
+import java.util.*;
+
+/**
+ * 探针样本：故意违反 CLAUDE.md 里每一条禁令。
+ *
+ * <p>
+ * 这是 txt 不是 java，永远不会被编译；GuardrailsTest 会把它复制成 .java 交给 Checkstyle，
+ * 确认规则**真的会报错**。写成 txt 还有一个原因：这份内容本身会让 checkstyle 规则命中，
+ * 放在 .java 里会"自己违规自己"。
+ */
+public class GuardrailsProbe {
+
+    @Autowired
+    private Object injected;
+
+    @DeleteMapping("probe")
+    public java.util.Date probe(Integer pageNum) {
+        System.out.println("bad");
+        try {
+            return new java.util.Date();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+}

@@ -22,6 +22,9 @@
         <checkstyle.version>10.21.1</checkstyle.version>
         <archunit.version>1.3.0</archunit.version>
         <jacoco.version>0.8.12</jacoco.version>
+        <!-- 默认 verify（无数据库）的 domain 包行覆盖率"地板"：只求挡住没写单测的领域规则 -->
+        <jacoco.domain.line.coverage.min>0.70</jacoco.domain.line.coverage.min>
+        <!-- coverage-check（带真库测试）的全局行覆盖率门槛 -->
         <jacoco.line.coverage.min>0.80</jacoco.line.coverage.min>
     </properties>
 
@@ -87,6 +90,16 @@
             <groupId>com.tngtech.archunit</groupId>
             <artifactId>archunit</artifactId>
             <version>${archunit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!--
+          与 checkstyle 插件同版本，只给 GuardrailsTest 用：它要**真的跑一遍规则**，
+          确认"故意违规的代码必须报错"，而不是只检查配置文件里有没有那些规则文本。
+        -->
+        <dependency>
+            <groupId>com.puppycrawl.tools</groupId>
+            <artifactId>checkstyle</artifactId>
+            <version>${checkstyle.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -190,6 +203,13 @@
                         <goals>
                             <goal>prepare-agent</goal>
                         </goals>
+                        <configuration>
+                            <!--
+                              append 默认 true 会让 jacoco.exec 跨构建累加，门槛被上一次的数据喂饱
+                              （实测：删掉单测都不报）。每次从零统计，门槛才不依赖 clean。
+                            -->
+                            <append>false</append>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>jacoco-report</id>
@@ -198,6 +218,34 @@
                             <goal>report</goal>
                         </goals>
                     </execution>
+                    <!--
+                      domain 覆盖率地板：默认 verify 就跑（不需要数据库）。为什么只卡 domain、
+                      为什么 element 必须是 PACKAGE（写成 BUNDLE 会静默失效）——见 ARCHITECTURE.md §五。
+                    -->
+                    <execution>
+                        <id>jacoco-domain-check</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <rule>
+                                    <element>PACKAGE</element>
+                                    <includes>
+                                        <include>cn.mklaus.app.domain.*</include>
+                                    </includes>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.domain.line.coverage.min}</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
         </plugins>
@@ -205,10 +253,8 @@
 
     <profiles>
         <!--
-          覆盖率门槛只在"带真库测试"的完整跑法里启用（CI 就是这么跑的）：
-          本地默认会跳过真库测试，覆盖率天然偏低，放进默认 verify 会让它长期红。
-          用法：MALL_DB_PASSWORD=xxx ./mvnw -Pcoverage-check verify -Dspring.profiles.active=local
-          报告：target/site/jacoco/index.html
+          全局覆盖率门槛：只在带真库测试的跑法里启用（本地跳过真库测试时全局比例天然偏低）。
+          用法：MALL_DB_USERNAME=klaus MALL_DB_PASSWORD=klaus ./mvnw -Pcoverage-check verify
         -->
         <profile>
             <id>coverage-check</id>

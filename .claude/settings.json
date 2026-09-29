@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/guard-rules.mjs",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/guard-rules.sh",
             "timeout": 15
           }
         ]

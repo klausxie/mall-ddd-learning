@@ -1,12 +1,14 @@
 package cn.mklaus.app;
 
-import cn.mklaus.app.domain.user.AddressMapper;
-import cn.mklaus.app.domain.user.UserMapper;
+import com.tngtech.archunit.core.domain.JavaClass;
+import com.tngtech.archunit.core.importer.ClassFileImporter;
+import com.tngtech.archunit.core.importer.ImportOption;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.Configuration;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -14,6 +16,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -29,7 +32,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class MapperStatementsTest {
 
-    private static final List<Class<?>> MAPPERS = List.of(UserMapper.class, AddressMapper.class);
+    /**
+     * 自动发现所有 {@code *Mapper} 接口。
+     *
+     * <p>
+     * **不要改回手写清单**：手写清单在"新增第 N 个 Mapper"时不会自动纳入对账，
+     * 而那一刻恰恰最容易出现"接口加了方法、XML 忘了写"。
+     */
+    private static final List<Class<?>> MAPPERS = new ClassFileImporter()
+        .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
+        .importPackages(Application.class.getPackageName())
+        .stream()
+        .filter(javaClass -> javaClass.isInterface() && javaClass.getSimpleName().endsWith("Mapper"))
+        .map(JavaClass::reflect)
+        .toList();
 
     /**
      * 与 application.yaml 里 mybatis-plus.type-handlers-package 保持一致。
@@ -38,6 +54,8 @@ class MapperStatementsTest {
 
     @Test
     void mapperMethodsAndXmlStatementsShouldMatchOneToOne() throws Exception {
+        assertFalse(MAPPERS.isEmpty(), "没有扫描到任何 *Mapper 接口：自动发现逻辑坏了，本测试会变成空转");
+
         Configuration configuration = loadMapperXml();
 
         List<String> problems = new ArrayList<>();
@@ -76,11 +94,28 @@ class MapperStatementsTest {
             configuration.addMapper(mapper);
 
             String resource = "mapper/" + mapper.getSimpleName() + ".xml";
-            try (InputStream in = Resources.getResourceAsStream(resource)) {
+            try (InputStream in = openMapperXml(resource)) {
                 new XMLMapperBuilder(in, configuration, resource, configuration.getSqlFragments()).parse();
             }
         }
         return configuration;
+    }
+
+    /**
+     * 读取 Mapper XML。
+     *
+     * <p>
+     * 注意 {@code Resources.getResourceAsStream} 找不到资源时是**抛 IOException**、不是返回 null，
+     * 所以必须显式接住，否则"忘了建 XML"只会得到一句 MyBatis 的
+     * {@code Could not find resource mapper/XxxMapper.xml}，看不到该往哪放。
+     */
+    private static InputStream openMapperXml(String resource) {
+        try {
+            return Resources.getResourceAsStream(resource);
+        } catch (IOException e) {
+            throw new IllegalStateException("缺少 XML 文件: src/main/resources/" + resource
+                + "（每个 *Mapper 接口都要配一份同名 XML，否则运行到该语句时才报 Invalid bound statement）", e);
+        }
     }
 
 }
