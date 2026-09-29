@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <!--
-  收货地址持久化。列名与 resources/schema.sql 的 `address` 表一一对应。
+  收货地址持久化。列名与 db/migration/V1__init_schema.sql 的 `address` 表一一对应（建表由 Flyway 完成）。
   列表与计数共用 addressFilter，避免两处条件写歪导致 total 与记录不匹配。
 -->
 <mapper namespace="cn.mklaus.app.domain.user.AddressMapper">
@@ -19,8 +19,12 @@
         <result property="detail" column="detail"/>
     </resultMap>
 
-    <sql id="addressColumns">
-        id, user_id, recipient, phone, province, city, district, detail
+    <sql id="baseColumns">
+        user_id, recipient, phone, province, city, district, detail
+    </sql>
+
+    <sql id="allColumns">
+        id, <include refid="baseColumns" />
     </sql>
 
     <sql id="addressFilter">
@@ -33,13 +37,13 @@
 
     <select id="getAddress" resultMap="addressResult">
         SELECT
-        <include refid="addressColumns"/>
+        <include refid="allColumns"/>
         FROM address
         WHERE id = #{addressId}
     </select>
 
     <insert id="saveAddress" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO address (user_id, recipient, phone, province, city, district, detail)
+        INSERT INTO address (<include refid="baseColumns"/>)
         VALUES (#{userId}, #{recipient}, #{phone}, #{province}, #{city}, #{district}, #{detail})
     </insert>
 
@@ -64,7 +68,7 @@
 
     <select id="listAddress" resultMap="addressResult">
         SELECT
-        <include refid="addressColumns"/>
+        <include refid="allColumns"/>
         FROM address
         <include refid="addressFilter"/>
         ORDER BY id DESC
