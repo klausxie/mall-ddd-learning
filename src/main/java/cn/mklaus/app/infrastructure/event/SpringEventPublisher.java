@@ -17,7 +17,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 @Slf4j
 @Component
 @AllArgsConstructor
-public class ApplicationEventPublisher implements EventPublisher {
+public class SpringEventPublisher implements EventPublisher {
 
     private final ApplicationContext applicationContext;
 

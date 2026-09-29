@@ -19,10 +19,10 @@ import static org.mockito.Mockito.verifyNoInteractions;
  * @author klaus
  * @since 2026/9/29
  */
-class ApplicationEventPublisherTest {
+class SpringEventPublisherTest {
 
     private final ApplicationContext applicationContext = mock(ApplicationContext.class);
-    private final ApplicationEventPublisher publisher = new ApplicationEventPublisher(applicationContext);
+    private final SpringEventPublisher publisher = new SpringEventPublisher(applicationContext);
 
     @AfterEach
     void clearSynchronization() {
