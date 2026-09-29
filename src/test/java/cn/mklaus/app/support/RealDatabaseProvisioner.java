@@ -120,7 +120,11 @@ final class RealDatabaseProvisioner {
     private static synchronized MySQLContainer startContainer() {
         if (container == null) {
             container = new MySQLContainer("mysql:8.0").withDatabaseName("mall").withUsername("klaus")
-                .withPassword("klaus");
+                .withPassword("klaus")
+                // 默认不生效：要设 TESTCONTAINERS_REUSE_ENABLE=true（或 ~/.testcontainers.properties 里的
+                // testcontainers.reuse.enable=true）。开启后跨轮复用容器，省掉每次约 7 秒的启动；
+                // 代价是容器常驻，以及改动"已应用过的迁移"会因 Flyway checksum 报错（那本来也禁止）。
+                .withReuse(true);
             container.start();
         }
         return container;

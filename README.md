@@ -73,6 +73,11 @@ MALL_DB_USERNAME=klaus MALL_DB_PASSWORD='<密码>' ./mvnw clean verify -Pcoverag
 数据在事务里跑完自动回滚，但 **Flyway 的建表 / 迁移不回滚**。CI 用 service container（①）；
 ③ 只是本地兜底，**真 MySQL 始终由 CI 校验**。
 
+想更快：`TESTCONTAINERS_REUSE_ENABLE=true` 复用上一次的容器（全量约 19s → 14s，单类约 11s → 6s）。
+代价是容器常驻（`docker ps` 里能看到，`docker rm -f` 清掉），以及改动已应用过的迁移会因 Flyway checksum 报错。
+
+项目现状（体量 / 封顶占比 / 覆盖率 / 真库走哪一级）一条命令：`scripts/facts.sh`（`--timings` 还能实测三条验证通道）。
+
 | 测试 | 覆盖 |
 |---|---|
 | `ArchitectureTest` | 分层、依赖方向、命名、断言归属等 12 条架构规则 |

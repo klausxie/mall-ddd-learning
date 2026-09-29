@@ -203,6 +203,7 @@ web ──────────► application ──────────
     （当前 564 / 1732 ≈ 32%）。要加一条新检查，先合并或删掉一条价值更低的；
   - **测试基础设施**（`support/`：真库置备 + 标记注解）**≤ 15%**（当前 201 / 1732 ≈ 11%）。
     它不算护栏（不检查规范，只负责把库准备好），单独设限是为了别让它无限膨胀；
+  - `scripts/`（`init.sh` / `facts.sh`）是工具，两个口径都不计入——既不检查规范，也不置备环境；
 - 真库测试（标了 `@RequiresRealDatabase` 的类）的数据源由 `support/RealDatabaseProvisioner` **三级置备**：
   ① 显式配置（环境变量 / profile 文件）→ ② 本机 Docker 可用就起 `mysql:8.0` 容器 → ③ 都没有则 H2(MODE=MySQL)。
   三级跑的都是同一份 `db/migration/V1__init_schema.sql`；选到 ③ 时打 WARN，**真 MySQL 由 CI 的 service container 校验**。

@@ -12,6 +12,10 @@ Spring Boot 3.5 + MyBatis-Plus + JDK 17 的单体 Java 项目。
 ./mvnw clean verify -Pcoverage-check
 ```
 
+迭代时不用每轮都跑 `verify`：`./mvnw -B -o -q spotless:apply checkstyle:check test-compile` 约 2 秒，
+验单个类用 `-Dtest=XxxApiTest`，收尾再跑全量——节奏与实测耗时见 AGENTS.md「改完必须跑」，
+项目现状用 `scripts/facts.sh`。
+
 覆盖率分两档：默认 `verify` 卡 **`domain` 每个包行覆盖 ≥ 70%**（地板），
 `-Pcoverage-check` 再卡**全局**行覆盖 ≥ 80%（CI 跑这条；本地也能满足，因为真库用例默认就跑）。
 两份门槛的机制与踩过的坑（jacoco 的 `append`）见 **@ARCHITECTURE.md** §五。

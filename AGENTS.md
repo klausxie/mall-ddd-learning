@@ -9,7 +9,19 @@
 ./mvnw verify
 ```
 
-它包含格式化检查、Checkstyle、ArchUnit 架构规则和单元测试，几秒内出结果。
+它包含格式化检查、Checkstyle、ArchUnit 架构规则、69 个用例（含真库端到端）和 domain 覆盖率地板。
+
+但**别每改一行就跑它**：18 秒里约 15 秒是固定开销（Maven 启动、Spring 上下文、容器启动），跟改动大小无关。
+按这个节奏迭代：
+
+| 什么时候 | 跑什么 | 实测 |
+|---|---|---|
+| 每改一版代码 | `./mvnw -B -o -q spotless:apply checkstyle:check test-compile` | ~2s |
+| 验某个类的行为 | `./mvnw -B -o test -Dtest=AddressApiTest` | ~5-11s |
+| 收尾（前两条替代不了它） | `./mvnw verify` | ~14-19s |
+
+想看项目现状（体量 / 封顶占比 / 覆盖率 / 真库走哪一级）：`scripts/facts.sh`，0.5 秒、只读。
+另外注意 **`test` 阶段也已经包含格式化与 Checkstyle**，所以格式问题在 2 秒那一步就会暴露。
 
 ## 不许绕过检查
 
@@ -47,6 +59,20 @@ web ──► application ──► domain ──► common
 `./mvnw verify` 默认就跑真库用例：数据源三级自动置备（显式配置 → 本机 Docker 起 `mysql:8.0` → H2 兜底），
 不配任何东西也能跑全量。它们都带 `@Transactional`，数据自动回滚，但 **Flyway 的建表 / 迁移不回滚**，
 所以自己配的库只能指向本地或你专属的库。详见 README「验证」。
+
+想更快：`TESTCONTAINERS_REUSE_ENABLE=true` 会复用已有容器（全量约 19s → 14s，单类约 11s → 6s）。
+代价是容器常驻（`docker ps` 可见，`docker rm -f` 清掉），且改动已应用过的迁移会因 Flyway checksum 报错
+——那本来就是禁止的。
+
+## 少走弯路的坑（都真实踩过）
+
+- **`git add` / `git rm` 多路径要当心**：只要有一个路径不存在，整条命令就**中止，且一个文件都没暂存**——
+  "提交信息写了、内容却不在里面"就是这么来的；`git rm` 遇到有未提交改动的文件也会中止，要加 `-f`。
+  提交前用 `git status --short` 核对暂存结果。
+- **沙箱里加依赖**：Maven 需要写 `~/.m2`，被拒时报 `Operation not permitted`，别误判成"依赖不存在"，
+  放宽一次权限即可。
+- **同一件事只写一处文档**：规范条文在 CLAUDE.md、结构在 ARCHITECTURE.md。副本必然掉队——
+  本仓库删掉的 harness 技能就是这么过期的。
 
 ## 提交
 
