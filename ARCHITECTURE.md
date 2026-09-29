@@ -102,6 +102,21 @@ POST /address/create
 
 > `common/` 不接受带业务含义的类。它一旦依赖 `domain`，ArchUnit 会直接报错。
 
+### 新建一个接口要动哪几处（照顺序过一遍）
+
+以"新增收货地址"为例，仓库里有可对照的完整实现：
+
+1. `application/<业务>/command/request/XxxRequest.java` —— 请求 DTO（`@Data` + 校验注解）
+2. `application/<业务>/{command,query}/response/XxxInfo.java` —— 响应模型，**不要把领域实体直接返回**
+3. 在 `application/<业务>/.../XxxCmdService` 加方法，**只编排**（只有一个实现时不拆接口/实现）
+4. 业务规则写进实体方法（`validate()` / `assertOwnedBy()`）、`XxxValidator`、`XxxSpec`（是不是）或 `XxxPolicy`（是多少）
+5. `web/XxxController` 加 `@PostMapping("create")`，返回 `Response<XxxInfo>`
+6. 需要落库：Mapper 接口 + `resources/mapper/XxxMapper.xml`（resultMap / INSERT / UPDATE 都要改）
+   + `db/migration/V2__xxx.sql`。三处对不上会被 `MapperStatementsTest` / `EntityMappingTest` 拦下
+7. 分页接口才需要 `Pageable` / `Page`
+8. 补测试：领域规则写单测（有 domain 覆盖率地板兜底）；端到端写 `*ApiTest`（真库、`@Transactional` 回滚）
+9. 跑 `./mvnw verify`
+
 ### 规格（Specification）怎么用
 
 `Spec<T>`（`common/spec`）把一条业务约束建模成具名、可单独测试的对象；

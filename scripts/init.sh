@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# 把本模板初始化成一个新项目：改包名 / 坐标 / 配置前缀 / 技能目录名。
+# 把本模板初始化成一个新项目：改包名 / 坐标 / 配置前缀。
 #
 # 用法：
 #   scripts/init.sh <groupId> <artifactId> <basePackage> [configPrefix] [--yes] [--force] [--reset-git]
@@ -13,7 +13,7 @@
 #   1. 只处理 git 跟踪的文件——与 GitHub "Use this template" 的行为一致，
 #      所以 target/、application-local.yaml（含真实凭证）这类文件不会被带进新项目；
 #   2. 默认要求工作区干净并要一次人工确认，避免有人直接在模板仓库里跑它把模板改掉；
-#   3. 顺手把样例标识符一起改掉：MALL_DB_* 环境变量、配置前缀、技能目录名、文档标题。
+#   3. 顺手把样例标识符一起改掉：MALL_DB_* 环境变量、配置前缀、文档标题。
 #
 # 它不会替你做的事：删减业务样例、写业务代码、commit。见 TEMPLATE.md 的"初始化后清单"。
 set -euo pipefail
@@ -21,7 +21,6 @@ set -euo pipefail
 OLD_GROUP="cn.mklaus"
 OLD_BASE="cn.mklaus.app"
 OLD_ARTIFACT="mall"
-OLD_SKILL="mall-conventions"
 OLD_CONFIG_PREFIX="mall"
 
 die() { printf '\033[31m错误：%s\033[0m\n' "$*" >&2; exit 1; }
@@ -79,7 +78,6 @@ cat <<EOF
   基础包         : $OLD_BASE -> $NEW_BASE
   配置前缀       : $OLD_CONFIG_PREFIX -> $NEW_PREFIX
   环境变量前缀   : MALL_DB_ -> ${ENV_PREFIX}_DB_
-  技能目录       : $OLD_SKILL -> ${NEW_PREFIX}-conventions
   重置 git 历史  : $([ "$RESET_GIT" -eq 1 ] && echo 是 || echo 否)
 EOF
 
@@ -103,7 +101,7 @@ replace_everywhere() {
     done < <(git ls-files | xargs grep -lI -- "$from" 2>/dev/null || true)
 }
 
-info "1/7 移动源码目录"
+info "1/6 移动源码目录"
 # 用 tr 而不是 ${VAR//./\/}：后者在 bash 里会保留反斜杠，得到 "cn\/mklaus\/app"，
 # 目录判断会静默失败——结果就是内容改了、目录没动，编译直接崩。
 OLD_PATH="$(printf '%s' "$OLD_BASE" | tr '.' '/')"
@@ -115,13 +113,12 @@ for root in src/main/java src/test/java; do
     fi
 done
 
-info "2/7 替换包名、坐标与环境变量前缀"
+info "2/6 替换包名、坐标与环境变量前缀"
 replace_everywhere "$OLD_BASE" "$NEW_BASE"
 replace_everywhere "$OLD_GROUP" "$NEW_GROUP"
 replace_everywhere "MALL_DB_" "${ENV_PREFIX}_DB_"
-replace_everywhere "$OLD_SKILL" "${NEW_PREFIX}-conventions"
 
-info "3/7 替换 pom / compose / 配置里的项目标识"
+info "3/6 替换 pom / compose / 配置里的项目标识"
 "${SED_INPLACE[@]}" "s|<artifactId>$OLD_ARTIFACT</artifactId>|<artifactId>$NEW_ARTIFACT</artifactId>|" pom.xml
 [ -f docker-compose.yml ] && "${SED_INPLACE[@]}" \
     -e "s|container_name: $OLD_ARTIFACT-mysql|container_name: $NEW_ARTIFACT-mysql|" \
@@ -135,7 +132,7 @@ for file in src/main/resources/application.yaml src/main/resources/application-l
         -e "s|MYSQL_DATABASE: $OLD_ARTIFACT|MYSQL_DATABASE: $NEW_PREFIX|" "$file"
 done
 
-info "4/7 替换文档里的项目名"
+info "4/6 替换文档里的项目名"
 # 注意：变量一律用 ${} 包起来。后面紧跟全角括号等多字节字符时，
 # 不加花括号会被 bash 当成变量名的一部分（unbound variable）。
 for file in README.md CLAUDE.md AGENTS.md ARCHITECTURE.md TEMPLATE.md; do
@@ -147,26 +144,14 @@ for file in README.md CLAUDE.md AGENTS.md ARCHITECTURE.md TEMPLATE.md; do
         -e "s|${OLD_CONFIG_PREFIX}\.captcha|${NEW_PREFIX}.captcha|g" "$file"
 done
 
-info "5/7 重命名技能目录"
-if [ -d ".claude/skills/$OLD_SKILL" ]; then
-    git mv ".claude/skills/$OLD_SKILL" ".claude/skills/${NEW_PREFIX}-conventions"
-fi
-if [ -e ".agents/skills/$OLD_SKILL" ] || [ -L ".agents/skills/$OLD_SKILL" ]; then
-    git rm -q --cached ".agents/skills/$OLD_SKILL" 2>/dev/null || true
-    rm -f ".agents/skills/$OLD_SKILL"
-fi
-mkdir -p .agents/skills
-ln -sfn "../../.claude/skills/${NEW_PREFIX}-conventions" ".agents/skills/${NEW_PREFIX}-conventions"
-git add ".agents/skills/${NEW_PREFIX}-conventions"
-
-info "6/7 清理空目录"
+info "5/6 清理空目录"
 find src -type d -empty -delete 2>/dev/null || true
 
-info "7/7 自检：确认没有旧标识残留"
+info "6/6 自检：确认没有旧标识残留"
 # 这一步是给"改名靠记忆必漏"兜底的：漏了就报错，而不是等编译/运行时才发现。
 # 排除脚本自己（它的常量里当然有旧标识）。
 LEFTOVERS="$(git ls-files | grep -v '^scripts/init.sh$' | xargs grep -lI \
-    -e "$OLD_BASE" -e "$OLD_GROUP" -e "MALL_DB_" -e "$OLD_SKILL" 2>/dev/null || true)"
+    -e "$OLD_BASE" -e "$OLD_GROUP" -e "MALL_DB_" 2>/dev/null || true)"
 if [ -n "$LEFTOVERS" ]; then
     printf '\033[31m以下文件里仍有旧标识，请手工确认（改名不完整会让新项目一开始就是坏的）：\033[0m\n' >&2
     printf '%s\n' "$LEFTOVERS" >&2

@@ -41,7 +41,7 @@ git clone <模板仓库> order-service && cd order-service
 - [ ] `src/main/resources/application-local.yaml.example`：环境变量名已随项目改名（不再是模板的旧前缀）
 - [ ] `.github/workflows/verify.yml`：CI 用的库名/端口与 compose 一致
 - [ ] `src/main/resources/db/migration/V1__init_schema.sql`：删掉用不上的示例表；后续变更新增 `V2__xxx.sql`，**不要改已执行过的版本**
-- [ ] `.claude/skills/<prefix>-conventions/SKILL.md` 与 `CLAUDE.md` / `ARCHITECTURE.md`：把示例业务（用户/地址）替换成自己的领域语言
+- [ ] `CLAUDE.md` / `ARCHITECTURE.md`：把示例业务（用户/地址）替换成自己的领域语言（本模板不再内置 harness 技能）
 - [ ] **替换下面的"样例替身"**，否则会带着假实现上线
 
 ## 三、样例替身清单（必须替换）
@@ -72,7 +72,7 @@ git clone <模板仓库> order-service && cd order-service
 ```
 需求：<一句话描述用例>
 
-按仓库规范落地（先读 CLAUDE.md / ARCHITECTURE.md，细节查 <prefix>-conventions 技能）：
+按仓库规范落地（先读 CLAUDE.md / ARCHITECTURE.md，新建接口要动哪几处见 ARCHITECTURE §二）：
 1. 规则先写进 domain：实体不变量 / XxxValidator / XxxSpec / XxxPolicy，并补单测
 2. 再补 application：request / response + assembler + Cmd|QueryService（只编排，不写规则）
 3. 最后补 web Controller：只用 GET/POST、路径 camelCase、返回 Response<T> 和响应模型

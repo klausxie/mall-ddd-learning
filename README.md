@@ -95,8 +95,7 @@ MALL_DB_USERNAME=klaus MALL_DB_PASSWORD=klaus ./mvnw clean verify -Pcoverage-che
 
 - [TEMPLATE.md](TEMPLATE.md)：**怎么用它初始化新项目**、初始化后清单、AI 协作提示词模板
 - [CLAUDE.md](CLAUDE.md)：怎么做、硬性禁令、构建与验证
-- [ARCHITECTURE.md](ARCHITECTURE.md)：目录职责、分层规则、已知偏差
-- [.claude/skills/mall-conventions/SKILL.md](.claude/skills/mall-conventions/SKILL.md)：动手时照着抄的细节与新建接口清单
+- [ARCHITECTURE.md](ARCHITECTURE.md)：目录职责、分层规则、已知偏差、**新建接口要动哪几处**
 - [AGENTS.md](AGENTS.md)：给任意 AI coding agent 的入口（与 harness 无关）
 - [scripts/init.sh](scripts/init.sh)：一条命令改名初始化
 
