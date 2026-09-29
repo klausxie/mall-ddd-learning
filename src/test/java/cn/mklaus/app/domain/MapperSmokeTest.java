@@ -6,8 +6,8 @@ import cn.mklaus.app.domain.user.Mobile;
 import cn.mklaus.app.domain.user.User;
 import cn.mklaus.app.domain.user.UserMapper;
 import cn.mklaus.app.domain.user.query.AddressPageCondition;
+import cn.mklaus.app.support.EnabledIfDatabaseConfigured;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Mapper 的真库冒烟测试：证明 XML 里的 SQL 与 Flyway 迁移建的表结构真的对得上。
  *
  * <p>
- * 默认跳过（需要能连上数据库），显式提供密码时才跑：
+ * 数据源配了密码就跑，没配则跳过（见 {@link EnabledIfDatabaseConfigured}）：
  *
  * <pre>
  * MALL_DB_PASSWORD=xxx ./mvnw test -Dtest=MapperSmokeTest
@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SpringBootTest
 @Transactional
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
-@EnabledIfEnvironmentVariable(named = "MALL_DB_PASSWORD", matches = ".+")
+@EnabledIfDatabaseConfigured
 class MapperSmokeTest {
 
     private final UserMapper userMapper;

@@ -3,10 +3,10 @@ package cn.mklaus.app.web;
 import cn.mklaus.app.domain.user.Mobile;
 import cn.mklaus.app.domain.user.User;
 import cn.mklaus.app.domain.user.UserMapper;
+import cn.mklaus.app.support.EnabledIfDatabaseConfigured;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -23,7 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * 地址接口端到端：鉴权替身（X-Operator-Id）→ 归属校验 → 增删改查 + 分页。
  *
  * <p>
- * 需要真实数据库，默认跳过：
+ * 需要真实数据库，数据源配了密码就跑，没配则跳过（见 {@link EnabledIfDatabaseConfigured}）：
  *
  * <pre>
  * MALL_DB_PASSWORD=xxx ./mvnw test -Dtest=AddressApiTest
@@ -36,7 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Transactional
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
-@EnabledIfEnvironmentVariable(named = "MALL_DB_PASSWORD", matches = ".+")
+@EnabledIfDatabaseConfigured
 class AddressApiTest {
 
     private static final String OPERATOR_HEADER = "X-Operator-Id";

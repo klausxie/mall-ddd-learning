@@ -3,8 +3,8 @@ package cn.mklaus.app.web;
 import cn.mklaus.app.domain.common.PasswordHasher;
 import cn.mklaus.app.domain.user.Mobile;
 import cn.mklaus.app.domain.user.UserMapper;
+import cn.mklaus.app.support.EnabledIfDatabaseConfigured;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -21,7 +21,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * 黄金路径：注册 → 校验验证码 → 成年规格 → 密码哈希入库 → 按年龄送积分 → 统一响应。
  *
  * <p>
- * 需要真实数据库（表由 Flyway 迁移创建），默认跳过：
+ * 需要真实数据库（表由 Flyway 迁移创建），数据源配了密码就跑，没配则跳过（见
+ * {@link EnabledIfDatabaseConfigured}）：
  *
  * <pre>
  * MALL_DB_PASSWORD=xxx ./mvnw test -Dtest=UserRegisterApiTest
@@ -37,7 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Transactional
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
-@EnabledIfEnvironmentVariable(named = "MALL_DB_PASSWORD", matches = ".+")
+@EnabledIfDatabaseConfigured
 class UserRegisterApiTest {
 
     private final MockMvc mockMvc;
