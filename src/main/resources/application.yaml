@@ -2,7 +2,7 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     # 默认指向本地 MySQL（docker-compose.yml 起的就是这套）；连自己的库请用环境变量或 application-local.yaml
-    url: ${MALL_DB_URL:jdbc:mysql://localhost:3306/mall?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&useSSL=false&allowPublicKeyRetrieval=true}
+    url: ${MALL_DB_URL:jdbc:mysql://127.0.0.1:3306/mall?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&useSSL=false&allowPublicKeyRetrieval=true}
     username: ${MALL_DB_USERNAME:klaus}
     password: ${MALL_DB_PASSWORD:}
   sql:
