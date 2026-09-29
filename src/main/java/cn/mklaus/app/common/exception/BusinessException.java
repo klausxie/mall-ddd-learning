@@ -9,13 +9,13 @@ import lombok.NoArgsConstructor;
  * @since 2023/11/4
  */
 @NoArgsConstructor
-public class BaseException extends RuntimeException {
+public class BusinessException extends RuntimeException {
 
-    public BaseException(String message) {
+    public BusinessException(String message) {
         super(message);
     }
 
-    public BaseException(String message, Throwable cause) {
+    public BusinessException(String message, Throwable cause) {
         super(message, cause);
     }
 

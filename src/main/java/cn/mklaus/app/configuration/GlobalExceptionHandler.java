@@ -1,6 +1,6 @@
 package cn.mklaus.app.configuration;
 
-import cn.mklaus.app.common.exception.BaseException;
+import cn.mklaus.app.common.exception.BusinessException;
 import cn.mklaus.app.common.exception.CommonErrorCode;
 import cn.mklaus.app.common.exception.ErrorCodeException;
 import cn.mklaus.app.common.model.Response;
@@ -32,8 +32,8 @@ public class GlobalExceptionHandler {
         return Response.error(e.getErrorCode().getCode(), e.getMessage());
     }
 
-    @ExceptionHandler(BaseException.class)
-    public Response<Void> handleBaseException(BaseException e) {
+    @ExceptionHandler(BusinessException.class)
+    public Response<Void> handleBaseException(BusinessException e) {
         log.warn("Base exception catch: {}", e.getMessage());
         return Response.error(e.getMessage());
     }

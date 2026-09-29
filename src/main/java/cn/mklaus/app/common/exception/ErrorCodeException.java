@@ -13,7 +13,7 @@ import java.text.MessageFormat;
  */
 @Getter
 @AllArgsConstructor
-public class ErrorCodeException extends BaseException {
+public class ErrorCodeException extends BusinessException {
 
     private final ErrorCode errorCode;
     private final Object[] args;
