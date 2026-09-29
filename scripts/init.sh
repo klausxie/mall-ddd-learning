@@ -114,6 +114,10 @@ for root in src/main/java src/test/java; do
 done
 
 info "2/6 替换包名、坐标与环境变量前缀"
+# 必须**先**替换斜杠形式：replace_everywhere 用的是 sed 正则，点号会匹配任意字符，
+# 于是 "cn.mklaus.app" 这一遍会把 "cn/mklaus/app" 也一起吃掉，替换成点号形式，
+# 让文档/脚本里的路径引用指向不存在的目录（而且自检看不出问题，因为 mklaus 已经没了）。
+replace_everywhere "$OLD_PATH" "$NEW_PATH"
 replace_everywhere "$OLD_BASE" "$NEW_BASE"
 replace_everywhere "$OLD_GROUP" "$NEW_GROUP"
 replace_everywhere "MALL_DB_" "${ENV_PREFIX}_DB_"
@@ -151,7 +155,7 @@ info "6/6 自检：确认没有旧标识残留"
 # 这一步是给"改名靠记忆必漏"兜底的：漏了就报错，而不是等编译/运行时才发现。
 # 排除脚本自己（它的常量里当然有旧标识）。
 LEFTOVERS="$(git ls-files | grep -v '^scripts/init.sh$' | xargs grep -lI \
-    -e "$OLD_BASE" -e "$OLD_GROUP" -e "MALL_DB_" 2>/dev/null || true)"
+    -e "$OLD_BASE" -e "$OLD_PATH" -e "$OLD_GROUP" -e "MALL_DB_" 2>/dev/null || true)"
 if [ -n "$LEFTOVERS" ]; then
     printf '\033[31m以下文件里仍有旧标识，请手工确认（改名不完整会让新项目一开始就是坏的）：\033[0m\n' >&2
     printf '%s\n' "$LEFTOVERS" >&2
