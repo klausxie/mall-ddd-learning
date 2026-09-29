@@ -5,11 +5,25 @@
 
 ## 一、初始化
 
+### 三种用法（先选一种，别混着来）
+
+| 用法 | 怎么做 | 什么时候用 |
+|---|---|---|
+| **① 当模板克隆**（首选） | `git clone -b <tag，如 v1-template> <模板仓库> order-service && cd order-service && ./scripts/init.sh cn.acme order-service cn.acme.order --yes --reset-git` | 自己起新项目。确定性最高：改名与配置由 `init.sh` 逐字带过 |
+| **② 当范例阅读** | `git clone -b <同一 tag> <模板仓库> /tmp/ref`，让 AI **读 `/tmp/ref` 里的文件**（入口 `AGENTS.md`），在你自己的仓库里照做 | 要移植到别的语言 / 框架，或没有建仓权限 |
+| **③ 只给 AI 一个链接** | 用 §五「5.1 从模板初始化」的提示词——它必须带逐字复制清单和数字化验收 | 前两种都不可行时的下策 |
+
+为什么建议克隆而不是让 AI 照着链接重写：这个仓库的价值集中在**不显眼但决定性**的文件里
+（`config/checkstyle.xml`、`ArchitectureTest`、`GuardrailsTest`、pom 里的门槛）。AI 凭记忆重写它们，
+得到的骨架"看着像、牙齿没了"。另外务必**钉住 tag 而不是追 `main`**——AI 干活期间参照物不该漂移。
+
+### 具体步骤
+
 ```bash
 # 在模板仓库点 "Use this template" 建新仓，或直接复制跟踪文件
 git clone <模板仓库> order-service && cd order-service
 
-# 一条命令改名（包名 / 坐标 / 配置前缀 / 环境变量前缀 / 技能目录）
+# 一条命令改名（包名 / 坐标 / 配置前缀 / 环境变量前缀）
 ./scripts/init.sh cn.acme order-service cn.acme.order
 
 # 骨架自检：这一步必须绿，之后再写业务
@@ -69,6 +83,35 @@ git clone <模板仓库> order-service && cd order-service
 关键认知：**AI 的产出质量取决于反馈信号，不取决于提示词多华丽**。
 所以第一步是把 `./mvnw verify` 和 CI 跑通，让每次改动都有红/绿反馈，然后再让它写业务。
 
+### 5.1 从模板初始化（如果这一步交给 AI）
+
+**先说结论：优先交给 `scripts/init.sh`，不要交给 AI。** 初始化的每一步都是确定性的，而 AI 面对一个链接
+只会抓几个文件、其余凭记忆重写，最容易丢掉那些"不显眼但决定性"的文件。真要交给它，就用这个提示词：
+
+```
+把 <模板仓库>@<tag 或 commit> 的骨架初始化到当前仓库。
+
+逐字复制，不要重写、不要"优化"、不要省略注释——尤其这几个（AI 最容易擅自改写的）：
+  config/checkstyle.xml、config/eclipse-formatter.xml
+  pom.xml（连同 4 个检查插件、两档覆盖率门槛、surefire 配置）
+  src/test/java/**/{ArchitectureTest,GuardrailsTest,EntityMappingTest,MapperStatementsTest}.java
+  src/test/java/**/support/**、src/test/resources/**、.claude/**、scripts/**、.github/**
+其余（src/main、五份文档等）一律整仓复制，不要挑着抄。
+
+然后：./scripts/init.sh <groupId> <artifactId> <basePackage> --yes --force
+再按本文件「二、初始化后清单」「三、样例替身清单」替换样例业务。
+
+验收（把命令与输出贴出来；任一条不满足就停下说明差异，不要"先继续、回头再补"）：
+  1) ./mvnw verify 全绿
+  2) ./scripts/facts.sh 的封顶占比与覆盖率，与参照仓库相差 ≤ 1 个百分点
+  3) git ls-files | wc -l 与参照仓库相差 ≤ 5
+  4) 故意改坏一处（例如从 config/checkstyle.xml 删掉一条规则），./mvnw verify 必须变红
+```
+
+第 4 条是整套验收里最重要的：它验证的不是"文件长得像"，而是**规则还生效**。
+
+### 5.2 让它写业务（日常迭代）
+
 给 AI 的任务提示词建议固定成这个形状：
 
 ```
@@ -89,6 +132,9 @@ git clone <模板仓库> order-service && cd order-service
 1. **一次一个纵切**：一个用例从 Controller 到 XML 一次做完，别让 AI 横着铺（"把三个域都建起来"最危险）。
 2. **先红后绿**：先让它写下会失败的测试（Spec / Policy / 真库端到端），再写实现。
 3. **真库测试当验收**：`-Pcoverage-check -Dspring.profiles.active=local` 通过才算完成，纯单测容易骗过自己。
+
+节奏：改一版先跑静态三连（约 2 秒），验行为只跑相关的测试类，收尾才 `./mvnw verify`——别每轮都跑全量，
+实测耗时与命令见 AGENTS.md「改完必须跑」。
 
 ## 六、常见坑
 

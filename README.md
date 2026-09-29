@@ -5,6 +5,14 @@ Spring Boot 3.5 + MyBatis-Plus + JDK 17 的 **AI + DDD 工程模板**：规范�
 
 本仓库同时也是模板的自演示：把模板本身的规则、测试、CI 跑通，就是新项目该有的起点。
 
+怎么用它，选一种（详表见 [TEMPLATE.md](TEMPLATE.md) §一）：
+
+| 用法 | 一句话 |
+|---|---|
+| ① 当模板克隆（首选） | `git clone -b <tag> <模板仓库> order-service` 后跑 `./scripts/init.sh`——改名与配置由脚本逐字带过 |
+| ② 当范例阅读 | `git clone` 到 `/tmp/ref`，让 AI **读文件**（入口 `AGENTS.md`），在你自己的仓库里照做 |
+| ③ 只给 AI 一个链接 | 下策：它会凭记忆重写那些"不显眼但决定性"的检查文件，必须配 TEMPLATE.md §五 的数字化验收 |
+
 ## 环境要求
 
 - JDK 17
