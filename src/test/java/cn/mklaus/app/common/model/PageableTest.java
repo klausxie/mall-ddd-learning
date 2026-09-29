@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 分页约定用测试钉住：CLAUDE.md 承诺 curPage 从 1 开始、pageSize 默认 10。
@@ -23,7 +22,6 @@ class PageableTest {
 
         assertEquals(Integer.valueOf(1), pageable.getCurPage());
         assertEquals(Integer.valueOf(10), pageable.getPageSize());
-        assertTrue(pageable.getNeedTotal());
     }
 
     @Test

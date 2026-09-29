@@ -15,7 +15,6 @@ public class Pageable {
 
     private Integer curPage = 1;
     private Integer pageSize = 10;
-    private Boolean needTotal = true;
 
     public int getOffset() {
         Asserts.state(curPage != null && curPage > 0, CommonErrorCode.CUR_PAGE_ILLEGAL);

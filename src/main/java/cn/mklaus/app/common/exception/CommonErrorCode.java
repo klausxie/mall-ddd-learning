@@ -27,11 +27,6 @@ public enum CommonErrorCode implements ErrorCode {
     STATE_ILLEGAL(40003, "{0}"),
 
     /**
-     * 实体不存在
-     */
-    ENTITY_NOT_FOUND(40004, "{0} not found"),
-
-    /**
      * 未登录（缺少操作人身份）
      */
     NOT_LOGGED_IN(40005, "未登录"),

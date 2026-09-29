@@ -1,6 +1,5 @@
 package cn.mklaus.app.common.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 import lombok.ToString;
@@ -25,11 +24,6 @@ public class Response<T> implements Serializable {
     private T data;
 
     private Response() {
-    }
-
-    @JsonIgnore
-    public boolean isOk() {
-        return code == SUCCESS_CODE;
     }
 
     public static <T> Response<T> ok() {
