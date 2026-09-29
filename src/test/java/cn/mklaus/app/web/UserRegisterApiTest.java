@@ -3,7 +3,7 @@ package cn.mklaus.app.web;
 import cn.mklaus.app.domain.common.PasswordHasher;
 import cn.mklaus.app.domain.user.Mobile;
 import cn.mklaus.app.domain.user.UserMapper;
-import cn.mklaus.app.support.EnabledIfDatabaseConfigured;
+import cn.mklaus.app.support.RequiresRealDatabase;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -38,7 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Transactional
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
-@EnabledIfDatabaseConfigured
+@RequiresRealDatabase
 class UserRegisterApiTest {
 
     private final MockMvc mockMvc;

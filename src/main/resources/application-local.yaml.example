@@ -19,6 +19,6 @@ mall:
     # 本地固定验证码，便于直接 curl 注册
     fixed-code: 123456
 
-# 用这个 profile 跑真库测试即可（凭证从本文件读）：
+# 填了本文件（或用 MALL_DB_* 环境变量）就走你这份库——真库测试置备的第一级：
 #   ./mvnw clean verify -Pcoverage-check -Dspring.profiles.active=local
-# 真库测试的开关就是"数据源配了密码"：这里填了，或另给环境变量 MALL_DB_PASSWORD，二者等价。
+# 什么都不配时，测试会自动起一个 mysql:8.0 容器；本机没有 Docker 则降级到 H2 快速通道。

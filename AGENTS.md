@@ -44,10 +44,9 @@ web ──► application ──► domain ──► common
 
 ## 真库测试
 
-数据源配了密码就跑（`MALL_DB_PASSWORD` 环境变量，或 local profile 的 `application-local.yaml`，
-二者等价）；没配则跳过并打印原因。它们都带 `@Transactional`，数据自动回滚，
-但 **Flyway 的建表 / 迁移不回滚**，所以只能指向本地或你专属的库。
-命令、两种配法与注意事项见 README「验证」。
+`./mvnw verify` 默认就跑真库用例：数据源三级自动置备（显式配置 → 本机 Docker 起 `mysql:8.0` → H2 兜底），
+不配任何东西也能跑全量。它们都带 `@Transactional`，数据自动回滚，但 **Flyway 的建表 / 迁移不回滚**，
+所以自己配的库只能指向本地或你专属的库。详见 README「验证」。
 
 ## 提交
 

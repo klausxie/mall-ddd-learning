@@ -3,7 +3,7 @@ package cn.mklaus.app.web;
 import cn.mklaus.app.domain.user.Mobile;
 import cn.mklaus.app.domain.user.User;
 import cn.mklaus.app.domain.user.UserMapper;
-import cn.mklaus.app.support.EnabledIfDatabaseConfigured;
+import cn.mklaus.app.support.RequiresRealDatabase;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,7 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Transactional
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
-@EnabledIfDatabaseConfigured
+@RequiresRealDatabase
 class AddressApiTest {
 
     private static final String OPERATOR_HEADER = "X-Operator-Id";

@@ -8,7 +8,7 @@ Spring Boot 3.5 + MyBatis-Plus + JDK 17 的 **AI + DDD 工程模板**：规范�
 ## 环境要求
 
 - JDK 17
-- MySQL 8（本地或容器均可）
+- MySQL 8（自带 compose，或用你自己的库；本机有 Docker 会自动起容器，没有则降级 H2）
 - Maven 用仓库自带的 `./mvnw`，无需本机安装
 
 ## 快速开始
@@ -53,21 +53,25 @@ curl -s 'localhost:8080/address/page?curPage=1&pageSize=10' -H 'X-Operator-Id: 1
 ./mvnw verify      # 格式 + 规范 + 架构 + 单测 + domain 覆盖率地板，不需要数据库
 ```
 
-真库测试的开关**只有一个**：数据源配了密码就跑，没配就跳过（跳过时控制台会打印原因，不会静默）。
-所以下面两种配法等价，任选其一。数据在事务里跑完自动回滚，但 **Flyway 的建表 / 迁移不回滚**：
+真库测试（`MapperSmokeTest`、`*ApiTest`）**默认就跑**：数据源按三级降级自动置备，不用手工配任何东西。
+
+| 级别 | 条件 | 用哪个库 |
+|---|---|---|
+| ① | 你配了数据源 | 你的库：`MALL_DB_*` / `SPRING_DATASOURCE_*` 环境变量，或 `application-<profile>.yaml` 里的密码 |
+| ② | 没配，但本机 Docker 可用 | 自动起一个 `mysql:8.0` 容器（Testcontainers，跑完由 Ryuk 回收；首次会拉镜像，约 600MB） |
+| ③ | 没配，也没有 Docker | H2 的 MySQL 兼容模式快速通道（同一份 Flyway 迁移；日志会 WARN 说明引擎不是 MySQL） |
 
 ```bash
-# ① 环境变量（CI 用的就是这种；也是 docker compose 那套账号）
-MALL_DB_USERNAME=klaus MALL_DB_PASSWORD=klaus ./mvnw clean verify -Pcoverage-check
-# ② 凭证写在 application-local.yaml，用 local profile 载入
+./mvnw verify                          # 默认：三级自动置备，跑全部 69 个用例
+./mvnw clean verify -Pcoverage-check   # 再加"全局行覆盖 ≥ 80%"的门槛
+# 想连你自己的库（只指向本地或你专属的库——Flyway 会在它上面建表 / 迁移）：
+MALL_DB_USERNAME=klaus MALL_DB_PASSWORD='<密码>' ./mvnw clean verify -Pcoverage-check
 ./mvnw clean verify -Pcoverage-check -Dspring.profiles.active=local
 # 覆盖率报告：target/site/jacoco/index.html
 ```
 
-`-Pcoverage-check` 打开行覆盖 ≥ 80% 的门槛，它跟真库测试一起跑，所以上面两条命令都需要能连上库。
-连自己的库时**只指向本地或你专属的库**——Flyway 会在那个库上建表 / 迁移。
-
-没有本地库时不必强求：默认的 `./mvnw verify` 不需要数据库，已覆盖格式化、Checkstyle、ArchUnit、单测与 domain 覆盖率地板。
+数据在事务里跑完自动回滚，但 **Flyway 的建表 / 迁移不回滚**。CI 用 service container（①）；
+③ 只是本地兜底，**真 MySQL 始终由 CI 校验**。
 
 | 测试 | 覆盖 |
 |---|---|
@@ -77,7 +81,7 @@ MALL_DB_USERNAME=klaus MALL_DB_PASSWORD=klaus ./mvnw clean verify -Pcoverage-che
 | `EntityMappingTest` | 实体字段 ↔ resultMap / INSERT / UPDATE ↔ 建表列 对账（不需要 DB） |
 | `ApplicationContextTest` | Bean 装配 + Mapper XML 解析（不需要 DB） |
 | 各 `*Test` 单测 | Spec / Policy / 密码哈希 / 分页 / 上下文 / 地址归属等 |
-| `MapperSmokeTest`、`*ApiTest` | 真库 SQL 与 HTTP 端到端（数据源配了密码才跑，跳过会说明原因） |
+| `MapperSmokeTest`、`*ApiTest` | 真库 SQL 与 HTTP 端到端（默认就跑：显式配置 → Docker 容器 → H2 兜底） |
 
 ## 接口一览
 

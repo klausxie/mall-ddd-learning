@@ -102,6 +102,20 @@
             <version>${checkstyle.version}</version>
             <scope>test</scope>
         </dependency>
+        <!--
+          真库测试的数据源：优先用显式配置，其次起 mysql:8.0 容器，最后降级到 H2 的 MySQL 兼容模式。
+          版本由 spring-boot-dependencies 管理。
+        -->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>mysql</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -247,6 +261,21 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <systemPropertyVariables>
+                        <!--
+                          docker-java 默认请求 Docker API 1.32，而较新的守护进程（如 Docker Desktop 4.93 /
+                          Engine 29）最低只支持 1.40，会直接回 400 —— 表现为 Testcontainers "看不到 Docker"。
+                          这里显式抬到 1.44。若你的守护进程更老（最高 API < 1.44），容器这一级会失败，
+                          然后按设计降级到 H2 快速通道，并在日志里说明原因。
+                        -->
+                        <api.version>1.44</api.version>
+                    </systemPropertyVariables>
+                </configuration>
             </plugin>
         </plugins>
     </build>

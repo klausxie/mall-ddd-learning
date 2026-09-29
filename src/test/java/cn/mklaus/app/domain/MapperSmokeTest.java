@@ -6,7 +6,7 @@ import cn.mklaus.app.domain.user.Mobile;
 import cn.mklaus.app.domain.user.User;
 import cn.mklaus.app.domain.user.UserMapper;
 import cn.mklaus.app.domain.user.query.AddressPageCondition;
-import cn.mklaus.app.support.EnabledIfDatabaseConfigured;
+import cn.mklaus.app.support.RequiresRealDatabase;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestConstructor;
@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SpringBootTest
 @Transactional
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
-@EnabledIfDatabaseConfigured
+@RequiresRealDatabase
 class MapperSmokeTest {
 
     private final UserMapper userMapper;

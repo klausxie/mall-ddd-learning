@@ -37,8 +37,9 @@ jobs:
           cache: maven
 
       # 建表由 Flyway 在 Spring 上下文启动时完成；
-      # verify = spotless:check + checkstyle + ArchUnit + 单测；
-      # 真库测试默认跳过，靠 MALL_DB_PASSWORD 打开；数据源用环境变量覆盖 application.yaml。
+      # verify = spotless:check + checkstyle + ArchUnit + 测试（含真库端到端）；
+      # 这里给的是真库置备的**第一级**（显式配置）：用 service container 比在容器里再起容器快。
+      # 本地不配任何东西也能跑全量：自动起 mysql:8.0，没 Docker 则降级 H2（见 README「验证」）。
       - name: Verify
         env:
           SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/mall?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&useSSL=false&allowPublicKeyRetrieval=true

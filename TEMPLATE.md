@@ -42,6 +42,8 @@ git clone <模板仓库> order-service && cd order-service
 - [ ] `.github/workflows/verify.yml`：CI 用的库名/端口与 compose 一致
 - [ ] `src/main/resources/db/migration/V1__init_schema.sql`：删掉用不上的示例表；后续变更新增 `V2__xxx.sql`，**不要改已执行过的版本**
 - [ ] `CLAUDE.md` / `ARCHITECTURE.md`：把示例业务（用户/地址）替换成自己的领域语言（本模板不再内置 harness 技能）
+- [ ] 真库测试的置备：`support/RealDatabaseProvisioner` 默认三级（显式配置 → Docker 容器 → H2）。
+      你若有 MySQL 专有 SQL，务必让 CI 用真库兜住（本模板 CI 已用 service container）
 - [ ] **替换下面的"样例替身"**，否则会带着假实现上线
 
 ## 三、样例替身清单（必须替换）
