@@ -1,15 +1,14 @@
 -- ============================================================================
 -- mall 样例库表结构（MySQL 8 / utf8mb4）
 --
--- 执行方式（手工执行一次即可）：
---   mysql -h <host> -u <user> -p <database> < src/main/resources/schema.sql
+-- 执行方式：**不要手工执行**。应用启动时由 Flyway 自动迁移（配置见 application.yaml 的
+-- spring.flyway；spring.sql.init.mode=never 已显式关掉 Spring 自带的 schema.sql/data.sql 初始化）。
+-- 变更方式：**新增 V2__xxx.sql，不要修改本文件**——Flyway 会校验已执行迁移的 checksum。
 --
 -- 说明：
 --   1. 只做 CREATE TABLE IF NOT EXISTS，不含任何 DROP / DELETE / TRUNCATE，重复执行安全；
---   2. Spring Boot 的 spring.sql.init.mode 默认是 embedded，MySQL 下不会自动执行本文件，
---      必须手工执行（H2 这类嵌入式库的测试会自动执行）；
---   3. 列严格对应 domain 模型字段，模型里没有的属性不加列；
---   4. 唯一键与领域校验一一对应，见各表 CHECK / UNIQUE 的注释。
+--   2. 列严格对应 domain 模型字段，模型里没有的属性不加列；
+--   3. 唯一键与领域校验一一对应，见各表 UNIQUE KEY 的注释。
 -- ============================================================================
 
 -- ---------------------------------------------------------------------------

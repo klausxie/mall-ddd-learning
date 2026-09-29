@@ -103,7 +103,7 @@ replace_everywhere() {
     done < <(git ls-files | xargs grep -lI -- "$from" 2>/dev/null || true)
 }
 
-info "1/6 移动源码目录"
+info "1/7 移动源码目录"
 # 用 tr 而不是 ${VAR//./\/}：后者在 bash 里会保留反斜杠，得到 "cn\/mklaus\/app"，
 # 目录判断会静默失败——结果就是内容改了、目录没动，编译直接崩。
 OLD_PATH="$(printf '%s' "$OLD_BASE" | tr '.' '/')"
@@ -115,13 +115,13 @@ for root in src/main/java src/test/java; do
     fi
 done
 
-info "2/6 替换包名、坐标与环境变量前缀"
+info "2/7 替换包名、坐标与环境变量前缀"
 replace_everywhere "$OLD_BASE" "$NEW_BASE"
 replace_everywhere "$OLD_GROUP" "$NEW_GROUP"
 replace_everywhere "MALL_DB_" "${ENV_PREFIX}_DB_"
 replace_everywhere "$OLD_SKILL" "${NEW_PREFIX}-conventions"
 
-info "3/6 替换 pom / compose / 配置里的项目标识"
+info "3/7 替换 pom / compose / 配置里的项目标识"
 "${SED_INPLACE[@]}" "s|<artifactId>$OLD_ARTIFACT</artifactId>|<artifactId>$NEW_ARTIFACT</artifactId>|" pom.xml
 [ -f docker-compose.yml ] && "${SED_INPLACE[@]}" \
     -e "s|container_name: $OLD_ARTIFACT-mysql|container_name: $NEW_ARTIFACT-mysql|" \
@@ -135,7 +135,7 @@ for file in src/main/resources/application.yaml src/main/resources/application-l
         -e "s|MYSQL_DATABASE: $OLD_ARTIFACT|MYSQL_DATABASE: $NEW_PREFIX|" "$file"
 done
 
-info "4/6 替换文档里的项目名"
+info "4/7 替换文档里的项目名"
 # 注意：变量一律用 ${} 包起来。后面紧跟全角括号等多字节字符时，
 # 不加花括号会被 bash 当成变量名的一部分（unbound variable）。
 for file in README.md CLAUDE.md AGENTS.md ARCHITECTURE.md TEMPLATE.md; do
@@ -147,7 +147,7 @@ for file in README.md CLAUDE.md AGENTS.md ARCHITECTURE.md TEMPLATE.md; do
         -e "s|${OLD_CONFIG_PREFIX}\.captcha|${NEW_PREFIX}.captcha|g" "$file"
 done
 
-info "5/6 重命名技能目录"
+info "5/7 重命名技能目录"
 if [ -d ".claude/skills/$OLD_SKILL" ]; then
     git mv ".claude/skills/$OLD_SKILL" ".claude/skills/${NEW_PREFIX}-conventions"
 fi
@@ -159,7 +159,7 @@ mkdir -p .agents/skills
 ln -sfn "../../.claude/skills/${NEW_PREFIX}-conventions" ".agents/skills/${NEW_PREFIX}-conventions"
 git add ".agents/skills/${NEW_PREFIX}-conventions"
 
-info "6/6 清理空目录"
+info "6/7 清理空目录"
 find src -type d -empty -delete 2>/dev/null || true
 
 info "7/7 自检：确认没有旧标识残留"
