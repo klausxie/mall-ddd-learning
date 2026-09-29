@@ -9,7 +9,7 @@ import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.StringUtils;
 import org.testcontainers.DockerClientFactory;
-import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.mysql.MySQLContainer;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -52,7 +52,7 @@ final class RealDatabaseProvisioner {
     private static final String DATASOURCE_URL = "spring.datasource.url";
 
     /** 容器只起一次，多个测试类共用。 */
-    private static MySQLContainer<?> container;
+    private static MySQLContainer container;
 
     private RealDatabaseProvisioner() {
     }
@@ -63,7 +63,7 @@ final class RealDatabaseProvisioner {
             return;
         }
         if (dockerAvailable()) {
-            MySQLContainer<?> mysql = startContainer();
+            MySQLContainer mysql = startContainer();
             Map<String, Object> properties = new LinkedHashMap<>();
             properties.put(DATASOURCE_URL, mysql.getJdbcUrl());
             properties.put("spring.datasource.username", mysql.getUsername());
@@ -117,9 +117,9 @@ final class RealDatabaseProvisioner {
         }
     }
 
-    private static synchronized MySQLContainer<?> startContainer() {
+    private static synchronized MySQLContainer startContainer() {
         if (container == null) {
-            container = new MySQLContainer<>("mysql:8.0").withDatabaseName("mall").withUsername("klaus")
+            container = new MySQLContainer("mysql:8.0").withDatabaseName("mall").withUsername("klaus")
                 .withPassword("klaus");
             container.start();
         }

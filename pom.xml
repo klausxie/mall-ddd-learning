@@ -22,6 +22,13 @@
         <checkstyle.version>10.21.1</checkstyle.version>
         <archunit.version>1.3.0</archunit.version>
         <jacoco.version>0.8.12</jacoco.version>
+        <!--
+          Testcontainers 2.x，供下面 dependencyManagement 里显式 import 的 testcontainers-bom 使用。
+          为什么不用 Boot 管理的 1.21.0：它底层的 docker-java 请求 Docker API 1.32，而较新的守护进程
+          （如 Docker Desktop 4.93 / Engine 29）最低只支持 1.40，会直接回 400——表现成"Testcontainers 看不到 Docker"。
+          2.x 已修正，因此不再需要给 surefire 传 api.version。另外 2.x 把 mysql 模块改名为 testcontainers-mysql。
+        -->
+        <testcontainers.version>2.0.5</testcontainers.version>
         <!-- 默认 verify（无数据库）的 domain 包行覆盖率"地板"：只求挡住没写单测的领域规则 -->
         <jacoco.domain.line.coverage.min>0.70</jacoco.domain.line.coverage.min>
         <!-- coverage-check（带真库测试）的全局行覆盖率门槛 -->
@@ -30,6 +37,19 @@
 
     <dependencyManagement>
         <dependencies>
+            <!--
+              显式 import Testcontainers 2.x 自己的 BOM，且放在 Boot 的 BOM **之前**（重复条目先声明者优先）。
+              不能只覆盖 testcontainers.version 属性：Boot 的 BOM 是"导入"进来的，它自己定义了这个属性，
+              导入型 BOM 的属性不会被本项目的同名属性覆盖，于是仍然锁在 1.21.0——而 1.21 里没有
+              改过名的 testcontainers-mysql 模块，表现为 "dependency version is missing"。
+            -->
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers-bom</artifactId>
+                <version>${testcontainers.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
@@ -104,11 +124,11 @@
         </dependency>
         <!--
           真库测试的数据源：优先用显式配置，其次起 mysql:8.0 容器，最后降级到 H2 的 MySQL 兼容模式。
-          版本由 spring-boot-dependencies 管理。
+          版本见上面的 testcontainers.version（2.x 的模块名是 testcontainers-mysql）。
         -->
         <dependency>
             <groupId>org.testcontainers</groupId>
-            <artifactId>mysql</artifactId>
+            <artifactId>testcontainers-mysql</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -261,21 +281,6 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <systemPropertyVariables>
-                        <!--
-                          docker-java 默认请求 Docker API 1.32，而较新的守护进程（如 Docker Desktop 4.93 /
-                          Engine 29）最低只支持 1.40，会直接回 400 —— 表现为 Testcontainers "看不到 Docker"。
-                          这里显式抬到 1.44。若你的守护进程更老（最高 API < 1.44），容器这一级会失败，
-                          然后按设计降级到 H2 快速通道，并在日志里说明原因。
-                        -->
-                        <api.version>1.44</api.version>
-                    </systemPropertyVariables>
-                </configuration>
             </plugin>
         </plugins>
     </build>
