@@ -1,13 +1,17 @@
 name: verify
 
-# 与本地 `./mvnw verify` 完全一致的门槛，另外用 service container 起一个 MySQL，
-# 让真库测试（MapperSmokeTest / *ApiTest）也跑起来。
+# 两端各一个 job。后端用 service container 起 MySQL（比在容器里再起容器快），
+# 前端装依赖跑 格式检查 + lint + 类型 + 测试 + 构建。
+#
+# 不按 paths 过滤：模板的默认值是"每次 push 都验两端"。按路径过滤确实省 CI 时间，
+# 但被跳过的 job 会让 PR 上的必需检查一直挂起（GitHub 的已知行为）；
+# 对示例项目来说，"少一个静默失效点"比省几十秒更重要。
 on:
   push:
   pull_request:
 
 jobs:
-  verify:
+  backend:
     runs-on: ubuntu-latest
 
     services:
@@ -40,13 +44,39 @@ jobs:
       # verify = spotless:check + checkstyle + ArchUnit + 测试（含真库端到端）；
       # 这里给的是真库置备的**第一级**（显式配置）：用 service container 比在容器里再起容器快。
       # 本地不配任何东西也能跑全量：自动起 mysql:8.0，没 Docker 则降级 H2（见 README「验证」）。
-      - name: Verify
+      - name: Verify backend
+        working-directory: backend
         env:
           SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/mall?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&useSSL=false&allowPublicKeyRetrieval=true
           SPRING_DATASOURCE_USERNAME: klaus
           SPRING_DATASOURCE_PASSWORD: klaus
           APP_DB_PASSWORD: klaus
-        # -Pcoverage-check：带真库测试跑覆盖率门槛（本地默认跳过真库测试，覆盖率会虚低）
+        # -Pcoverage-check：带真库测试跑覆盖率门槛。
         # 显式传 -D....skip=false：即便有人在 pom.xml 里把检查设成 skip，CI 也会照跑。
         # 与 GuardrailsTest 一外一内：那个测试查"配置没被改弱"，这里保证"就算改了也照样执行"。
         run: ./mvnw -B -Pcoverage-check -Dspotless.check.skip=false -Dcheckstyle.skip=false -DskipTests=false -Dmaven.test.skip=false -Djacoco.skip=false verify
+
+  frontend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      # 与本地 `make verify-frontend` 同一条命令：本地与 CI 走同一条路径，
+      # 才不会出现"本地绿、CI 红"这种要靠猜的差异。
+      - name: Verify frontend
+        working-directory: frontend
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm run verify

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# 把本模板初始化成一个新项目：改包名 / 坐标 / 数据库名。
+# 把本模板初始化成一个新项目：改包名 / 坐标 / 数据库名 / 前端项目名。
 #
 # 用法：
 #   scripts/init.sh <groupId> <artifactId> <basePackage> [dbName] [--yes] [--force] [--reset-git]
@@ -102,19 +102,19 @@ replace_everywhere() {
     done < <(git ls-files | xargs grep -lI -- "$from" 2>/dev/null || true)
 }
 
-info "1/6 移动源码目录"
+info "1/7 移动源码目录"
 # 用 tr 而不是 ${VAR//./\/}：后者在 bash 里会保留反斜杠，得到 "cn\/mklaus\/app"，
 # 目录判断会静默失败——结果就是内容改了、目录没动，编译直接崩。
 OLD_PATH="$(printf '%s' "$OLD_BASE" | tr '.' '/')"
 NEW_PATH="$(printf '%s' "$NEW_BASE" | tr '.' '/')"
-for root in src/main/java src/test/java; do
+for root in backend/src/main/java backend/src/test/java; do
     if [ -d "$root/$OLD_PATH" ]; then
         mkdir -p "$(dirname "$root/$NEW_PATH")"
         git mv "$root/$OLD_PATH" "$root/$NEW_PATH"
     fi
 done
 
-info "2/6 替换包名与坐标"
+info "2/7 替换包名与坐标"
 # 必须**先**替换斜杠形式：replace_everywhere 用的是 sed 正则，点号会匹配任意字符，
 # 于是 "cn.mklaus.app" 这一遍会把 "cn/mklaus/app" 也一起吃掉，替换成点号形式，
 # 让文档/脚本里的路径引用指向不存在的目录（而且自检看不出问题，因为 mklaus 已经没了）。
@@ -122,23 +122,23 @@ replace_everywhere "$OLD_PATH" "$NEW_PATH"
 replace_everywhere "$OLD_BASE" "$NEW_BASE"
 replace_everywhere "$OLD_GROUP" "$NEW_GROUP"
 
-info "3/6 替换 pom / compose / 配置里的项目标识"
-"${SED_INPLACE[@]}" "s|<artifactId>$OLD_ARTIFACT</artifactId>|<artifactId>$NEW_ARTIFACT</artifactId>|" pom.xml
+info "3/7 替换 pom / compose / 配置里的项目标识"
+"${SED_INPLACE[@]}" "s|<artifactId>$OLD_ARTIFACT</artifactId>|<artifactId>$NEW_ARTIFACT</artifactId>|" backend/pom.xml
 [ -f docker-compose.yml ] && "${SED_INPLACE[@]}" \
     -e "s|container_name: $OLD_ARTIFACT-mysql|container_name: $NEW_ARTIFACT-mysql|" \
     -e "s|MYSQL_DATABASE: $OLD_ARTIFACT|MYSQL_DATABASE: $NEW_DB_NAME|" docker-compose.yml
 # 配置项前缀固定是 `app.*`，这里只改数据库名（compose 建的库名 + JDBC URL 里的库名）。
-for file in src/main/resources/application.yaml src/main/resources/application-local.yaml.example .github/workflows/verify.yml; do
+for file in backend/src/main/resources/application.yaml backend/src/main/resources/application-local.yaml.example .github/workflows/verify.yml; do
     [ -f "$file" ] || continue
     "${SED_INPLACE[@]}" \
         -e "s|/$OLD_ARTIFACT?|/$NEW_DB_NAME?|" \
         -e "s|MYSQL_DATABASE: $OLD_ARTIFACT|MYSQL_DATABASE: $NEW_DB_NAME|" "$file"
 done
 
-info "4/6 替换文档里的项目名"
+info "4/7 替换文档里的项目名"
 # 注意：变量一律用 ${} 包起来。后面紧跟全角括号等多字节字符时，
 # 不加花括号会被 bash 当成变量名的一部分（unbound variable）。
-for file in README.md CLAUDE.md AGENTS.md ARCHITECTURE.md TEMPLATE.md; do
+for file in README.md CLAUDE.md AGENTS.md ARCHITECTURE.md TEMPLATE.md backend/CLAUDE.md frontend/CLAUDE.md; do
     [ -f "$file" ] || continue
     "${SED_INPLACE[@]}" \
         -e "s|^# ${OLD_ARTIFACT}|# ${NEW_ARTIFACT}|" \
@@ -146,10 +146,20 @@ for file in README.md CLAUDE.md AGENTS.md ARCHITECTURE.md TEMPLATE.md; do
         -e "s|${OLD_ARTIFACT} 项目|${NEW_ARTIFACT} 项目|g" "$file"
 done
 
-info "5/6 清理空目录"
-find src -type d -empty -delete 2>/dev/null || true
+info "5/7 替换前端项目标识"
+if [ -f frontend/package.json ]; then
+    # 只改"名字"这一类字段：前端的依赖、脚本与配置跟后端无关，不该被改名脚本碰。
+    "${SED_INPLACE[@]}" -e "s|\"name\": \"[^\"]*\"|\"name\": \"${NEW_ARTIFACT}-frontend\"|" frontend/package.json
+    info "  frontend/package.json -> name: ${NEW_ARTIFACT}-frontend"
+fi
+if [ -f frontend/index.html ]; then
+    "${SED_INPLACE[@]}" -e "s|<title>[^<]*</title>|<title>${NEW_ARTIFACT}</title>|" frontend/index.html
+fi
 
-info "6/6 自检：确认没有旧标识残留"
+info "6/7 清理空目录"
+find backend/src -type d -empty -delete 2>/dev/null || true
+
+info "7/7 自检：确认没有旧标识残留"
 # 这一步是给"改名靠记忆必漏"兜底的：漏了就报错，而不是等编译/运行时才发现。
 # 排除脚本自己（它的常量里当然有旧标识）。
 LEFTOVERS="$(git ls-files | grep -v '^scripts/init.sh$' | xargs grep -lI \

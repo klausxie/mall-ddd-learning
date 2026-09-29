@@ -2,5 +2,13 @@
 application-local.yaml
 application-local.yml
 .env
-target/
 .idea/
+*.iml
+.DS_Store
+
+# 构建产物
+target/
+node_modules/
+dist/
+coverage/
+.vite/

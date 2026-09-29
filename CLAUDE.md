@@ -1,101 +1,50 @@
-# mall 项目开发规范
+# mall：前后端同仓的工程模板
 
-Spring Boot 3.5 + MyBatis-Plus + JDK 17 的单体 Java 项目。
+后端 Spring Boot 3.5 + MyBatis-Plus（`backend/`，Maven），前端 React + Vite + TS（`frontend/`，pnpm），同仓。
+规范写在文档里、由工具强制、改完有一条命令可验证。
 
-## 构建与验证
+## 仓库地图
 
-```bash
-./mvnw verify                      # 完整校验：格式化 + Checkstyle + ArchUnit + 单测 + 真库端到端（三级自动置备）
-./mvnw spotless:apply              # 只做格式化（本地改完代码先跑这个）
-./mvnw spring-boot:run             # 启动（默认 8080）
-# 再加"全局行覆盖 ≥ 80%"的门槛（CI 同款）；连自己的库用 APP_DB_* 或 -Dspring.profiles.active=local：
-./mvnw clean verify -Pcoverage-check
-```
+| 位置 | 是什么 | 该端的规则 |
+|---|---|---|
+| `backend/` | Java 后端（Maven，`./mvnw`） | **backend/CLAUDE.md** |
+| `frontend/` | React + Vite + TS 前端（pnpm） | **frontend/CLAUDE.md** |
+| `scripts/` | 仓库级工具：`init.sh` / `facts.sh` / `dev.sh` / `verify-all.sh` | 各脚本头部注释 |
+| `AGENTS.md` | 给任意 AI coding agent 的入口 | 本文件 + 两端规则 |
+| `ARCHITECTURE.md` | 仓库布局、后端分层、跨端契约、度量机制 | —— |
+| `TEMPLATE.md` | 怎么用它初始化新项目 | —— |
 
-迭代时不用每轮都跑 `verify`：`./mvnw -B -o -q spotless:apply checkstyle:check test-compile` 约 2 秒，
-验单个类用 `-Dtest=XxxApiTest`，收尾再跑全量——节奏与实测耗时见 AGENTS.md「改完必须跑」，
-项目现状用 `scripts/facts.sh`。
+## 验证节奏（省时间的关键）
 
-覆盖率分两档：默认 `verify` 卡 **`domain` 每个包行覆盖 ≥ 70%**（地板），
-`-Pcoverage-check` 再卡**全局**行覆盖 ≥ 80%（CI 跑这条；本地也能满足，因为真库用例默认就跑）。
-两份门槛的机制与踩过的坑（jacoco 的 `append`）见 **@ARCHITECTURE.md** §五。
+| 什么时候 | 跑什么 | 实测 |
+|---|---|---|
+| 改后端一行 | `cd backend && ./mvnw -B -o -q spotless:apply checkstyle:check test-compile` | ~2s |
+| 验后端某个类 | `cd backend && ./mvnw -B -o test -Dtest=AddressApiTest` | ~5-11s |
+| 改前端一行 | `cd frontend && pnpm typecheck && pnpm lint` | ~2s |
+| **收尾（必须）** | `make verify`（= `scripts/verify-all.sh`，两端全量） | 后端 ~19s + 前端 ~20s |
 
-数据库连接串从环境变量取；本地调试需要：
+项目现状（两端体量 / 封顶占比 / 覆盖率 / 真库走哪一级）：`scripts/facts.sh`，0.5 秒、只读。
+两端各自的完整命令与门槛，见 `backend/CLAUDE.md` 与 `frontend/CLAUDE.md`。
 
-```bash
-export APP_DB_PASSWORD='<密码>'
-export APP_DB_USERNAME='klaus'    # 可选，默认 klaus
-```
+## 跨端边界（硬性）
 
-或把凭证写进 `src/main/resources/application-local.yaml`（已在 `.gitignore` 里，模板见
-`application-local.yaml.example`），再用 `--spring.profiles.active=local` 启动 / 跑测试；
-但**只指向本地或你专属的库**——Flyway 会在这个库上建表 / 迁移，且迁移不在事务回滚范围内。
+- **唯一契约是 HTTP**。前端不许以任何方式 import 后端源码；后端不感知前端的存在。
+- 前端的 HTTP 调用**只能出现在 `frontend/src/api/`**，路径一律取自 `src/api/paths.ts`。
+- 改接口路径 = 同时改后端 Controller 与 `paths.ts`；两边不一致会被 `ApiContractTest` 在**构建期**拦下。
+- 令牌是 **HttpOnly + SameSite=Lax 的 Cookie**：开发态走 Vite 代理、生产走同源反代，**不要引入 CORS**。
+- 后端**不**加 `server.servlet.context-path`；`/api` 前缀只存在于前端代理与生产反代里（由它们 rewrite 掉）。
 
-真库测试**默认就跑**，数据源三级自动置备：**显式配置 → 本机 Docker 起 `mysql:8.0` → H2(MODE=MySQL) 兜底**。
-不配任何东西也能跑全量；CI 用 service container，属于第一级：
+## 不许绕过检查
 
-```bash
-./mvnw verify                                                                          # 三级自动置备
-APP_DB_USERNAME=klaus APP_DB_PASSWORD='<密码>' ./mvnw clean verify -Pcoverage-check   # 连你自己的库
-```
+两端各自有护栏测试（后端 `GuardrailsTest`、前端护栏测试），检查规则文件、构建配置与 CI 参数没被改弱——
+"改规则让检查通过"过不了 `make verify`。各端的禁令清单见该端的 `CLAUDE.md`。
 
-凭证放在 `application-local.yaml` 时改加 `-Dspring.profiles.active=local`。详见 README「验证」。
+## 封顶（**按端分别算**）
 
-**不要把凭证写进 `application.yaml`。**
+- 后端：检查类护栏 ≤ 主代码 40%，测试基础设施 ≤ 15%；
+- 前端：检查类护栏（配置 + 护栏测试）≤ 源码 40%，测试行数单列参考。
 
-**一轮改动结束前 `./mvnw verify` 必须通过。**
-
-## 代码风格：交给工具，不要手工调
-
-- 格式化由 **Spotless + Eclipse formatter** 统一，配置在 `config/eclipse-formatter.xml`。
-  缩进 4 空格、行宽 120、大括号 K&R、import 顺序按 IDEA 默认布局。
-- **不要手工调整缩进、换行、import 顺序**，改完运行 `./mvnw spotless:apply`。
-- 静态检查由 **Checkstyle** 负责，配置在 `config/checkstyle.xml`，
-  只管命名、修饰符、通配符导入和下面那些"禁令"，**刻意不含任何格式规则**（避免和 Spotless 互相打架）。
-- IntelliJ IDEA 对齐方式：
-  `Settings → Editor → Code Style → Java → 齿轮 → Import Scheme → Eclipse XML Profile`，
-  选 `config/eclipse-formatter.xml`，并打开 `Actions on Save` 的 Reformat code / Optimize imports。
-
-## 接口约定（强制）
-
-- **HTTP 方法只允许 GET 和 POST。** 禁止 PUT / PATCH / DELETE。
-  查询用 GET；新增、修改、删除一律用 POST，用路径上的动词区分。
-- **路径用 camelCase**，例如 `/user/create`、`/address/create`、`/address/page`。
-  禁止 kebab-case、下划线、全小写拼接。
-- **分页参数固定为 `curPage` / `pageSize`**（`curPage` 从 1 开始，`pageSize` 默认 10）。
-  禁止 `pageNumber` / `pageNum` / `currentPage` / `pageIndex` / `limit` / `offset` 作为对外参数名。
-  统一继承 `common/model/Pageable`，返回 `common/model/Page<T>`。
-
-上面这几条已经落成 Checkstyle 规则，违反会直接让 `./mvnw verify` 失败。
-
-## 架构约束
-
-分层、目录职责、"新文件放哪里"见 **@ARCHITECTURE.md**。
-其中"谁不许依赖谁"由 `ArchitectureTest` 强制，违反会让测试失败。
-
-## 硬性禁令
-
-- 禁止 `System.out` / `System.err`，用 SLF4J（`@Slf4j`）。
-- 禁止 `e.printStackTrace()`，用日志并保留异常。
-- 禁止 `@Autowired` 注入，统一用构造器注入（Lombok `@AllArgsConstructor`）。
-- 禁止通配符导入 `import xxx.*`。
-- 禁止 `new Date()`，用 `java.time`。
-
-## 检查失败时怎么办
-
-**改代码，不要改规则。** 具体来说：
-
-- 不要编辑 `config/checkstyle.xml` 或 `config/eclipse-formatter.xml` 来让检查通过；
-- 不要从 `pom.xml` 里移除 spotless / checkstyle / archunit；
-- 不要用 `-Dspotless.check.skip=true`、`-Dcheckstyle.skip=true`、`-DskipTests` 绕过。
-
-上面这几条有 `GuardrailsTest` 兜底：它在 `./mvnw verify` 里校验规则文件、pom 里的检查插件和 CI
-参数没被改弱，所以"改规则让检查通过"过不了 verify。
-
-护栏本身也**封顶**：检查类代码（`GuardrailsTest` / `EntityMappingTest` / 钩子 / 探针）≤ 主代码 40%（现 32%），
-测试基础设施（`support/`）≤ 15%（现 11%）；要加一条新检查，先合并或删掉一条旧的低价值的。见 ARCHITECTURE.md §五。
-
-确实认为规则本身需要调整时，**先说明理由并征求确认**，然后同时更新规则文件、`GuardrailsTest` 和本文件。
+分母混在一起这条规则就没有意义了。当前数值与理由见 `ARCHITECTURE.md` §五 与 `scripts/facts.sh`。
 
 ## 提交约定
 
@@ -115,12 +64,8 @@ chore: 升级 spring-boot 到 3.5.1
 - 需要正文时空一行再写，正文写**为什么**，不写"改了什么"——改了什么看 diff 就有；
 - 这条目前**没有机器强制**（不引 commitlint），靠自觉与 review。
 
-## 凭证与配置
+## 凭证
 
-- 应用配置一律挂在**固定的 `app.*` 前缀**下（如 `app.auth.token-ttl`、`app.captcha.fixed-code`），
-  覆盖用的环境变量同样固定（连库 `APP_DB_*`、签名密钥 `APP_AUTH_TOKEN_SECRET`）：这些前缀都不随项目改名，
-  于是改名脚本不必去改写 Java / 文档里的 `@Value` 引用，也不会出现"代码读的前缀和配置里写的对不上"这种静默失效。
-- 凭证只放 `src/main/resources/application-local.yaml`（已在 `.gitignore` 里，**不要**用 `git add -f` 强加）；
-  主配置里只允许 `${APP_DB_PASSWORD:}` 这类占位符。
-- 凭证**一旦提交进仓库就删不掉**——它留在 git 历史里。真发生了，处置顺序是：① 换凭证（必须）；② 再谈清历史。
-  `GuardrailsTest` 会守住上面这两条。
+凭证只放本地：`backend/src/main/resources/application-local.yaml`（已在 `.gitignore` 里，**不要**用 `git add -f` 强加）；
+主配置里只允许 `${APP_DB_PASSWORD:}` 这类占位符。凭证**一旦提交进仓库就删不掉**，
+处置顺序是：① 换凭证（必须）；② 再谈清历史。

@@ -7,14 +7,34 @@
 > 注意 `ArchitectureTest` 的包名从 `Application` 推导，**不要在规则里写死包名**，否则改名必漏。
 
 > 目录怎么摆很难自动检查，但"谁不许依赖谁"是可以的——所以下文的**分层规则**同时写进了
-> `src/test/java/cn/mklaus/app/ArchitectureTest.java`，违反会直接让 `mvn verify` 失败。
+> `backend/src/test/java/cn/mklaus/app/ArchitectureTest.java`，违反会直接让 `make verify-backend` 失败。
 
 ---
 
-## 一、目录结构与职责
+## 〇、仓库布局（前后端同仓）
 
 ```
-src/main/java/cn/mklaus/app/
+mall/
+├── backend/     Maven：Java 后端（pom.xml / mvnw / .mvn / config / src）——§一~§四 讲的都是它
+├── frontend/    pnpm：React + Vite + TS 前端（package.json / src / 自己那套检查配置）
+├── scripts/     仓库级工具：init.sh（初始化改名）/ facts.sh（现状速览）/ dev.sh / verify-all.sh
+├── Makefile     唯一入口：make verify / verify-backend / verify-frontend / dev / facts
+├── .github/     CI：两端各一个 job（后端用 service container 起 MySQL）
+└── .claude/     钩子：编辑时直接拦"改规则让检查通过"
+```
+
+**跨端唯一契约是 HTTP**，边界上有三条硬规则：
+
+1. 前端的 HTTP 调用**只能**出现在 `frontend/src/api/`，路径一律取自 `frontend/src/api/paths.ts`；
+2. `ApiContractTest`（在 backend 的测试里）解析两端**真实文件**，断言"前端声明的每个路径后端都真的暴露"——
+   改接口名忘了改前端会在**构建期**失败，而不是上线 404。这是跨端唯一能机器兜住的东西；
+3. 令牌是 **HttpOnly + SameSite=Lax 的 Cookie**：开发态靠 Vite 代理（`/api` → `:8080` 并 rewrite 掉前缀），
+   生产靠同源反代；因此后端**不加 CORS、不加 `server.servlet.context-path`**。
+
+## 一、目录结构与职责（后端）
+
+```
+backend/src/main/java/cn/mklaus/app/
 ├── Application.java              启动类
 │
 ├── web/                          【最外层】HTTP 入口
@@ -212,7 +232,8 @@ web ──────────► application ──────────
 | `MapperSmokeTest` | 是 | 真库 SQL：与 Flyway 建的表对齐、自增回填、分页 |
 | `UserRegisterApiTest`、`UserLoginApiTest`、`AddressApiTest` | 是 | HTTP 端到端：注册送积分、登录换令牌（Bearer 头与 Cookie 两条路都走一遍）、地址增删改查与分页 |
 
-- `./mvnw verify` 跑上表全部用例（含真库，约 15–20 秒）：真库那一档不配任何东西也能跑（三级自动置备）；
+- `make verify-backend`（= `cd backend && ./mvnw ... verify`）跑上表全部用例（含真库，约 15–20 秒）：
+  真库那一档不配任何东西也能跑（三级自动置备）；
 - **封顶（两个口径，分别报数）**：
   - **检查类护栏**（`GuardrailsTest` + `EntityMappingTest` + `.claude/hooks` + 探针样本）**≤ 主代码 40%**
     （当前 564 / 2209 ≈ 25%）。要加一条新检查，先合并或删掉一条价值更低的；
@@ -223,15 +244,21 @@ web ──────────► application ──────────
   ① 显式配置（环境变量 / profile 文件）→ ② 本机 Docker 可用就起 `mysql:8.0` 容器 → ③ 都没有则 H2(MODE=MySQL)。
   三级跑的都是同一份 `db/migration/V1__init_schema.sql`；选到 ③ 时打 WARN，**真 MySQL 由 CI 的 service container 校验**。
   它们都带 `@Transactional`，跑完自动回滚；
-- 覆盖率分两档，报告都在 `target/site/jacoco/index.html`：
+- 覆盖率分两档，报告都在 `backend/target/site/jacoco/index.html`：
   - **默认 verify**：`domain` 每个包的行覆盖 ≥ 70%（`jacoco.domain.line.coverage.min`）。
     domain 是纯规则、单测就能覆盖，这条地板只依赖单测（真库用例跑不跑都成立）；逐包评估，
     "新加一个 domain 包却没写单测"藏不住；
   - **`coverage-check` profile**：全局行覆盖 ≥ 80%（`jacoco.line.coverage.min`），带真库测试跑，
-    CI 用这条：`APP_DB_USERNAME=klaus APP_DB_PASSWORD=klaus ./mvnw clean verify -Pcoverage-check`；
+    CI 用这条：`cd backend && APP_DB_USERNAME=klaus APP_DB_PASSWORD=klaus ./mvnw clean verify -Pcoverage-check`；
   - `jacoco-prepare-agent` 关掉了 `append`：它默认是 `true`，会让 `jacoco.exec` 跨构建累加，
     门槛被上一次构建的数据喂饱（实测"删掉单测"都不报），关掉之后不依赖 `clean` 也可信；
-- CI（`.github/workflows/verify.yml`）用 MySQL service container 跑全量，包括真库测试与覆盖率门槛。
+- **封顶按端分别算**（分母一混这条规则就失去意义）：
+  - 前端：检查类护栏（`eslint.config.*` / `.prettierrc*` / `tsconfig*.json` / `vite.config.ts` + 护栏测试）
+    ≤ 前端源码 40%；测试行数单列参考，不设上限。前端没有覆盖率门槛（示例项目里它的价值低于维护成本）；
+  - 两端当前数值都由 `scripts/facts.sh` 打印，改定义请同步那个脚本。
+- CI（`.github/workflows/verify.yml`）两个 job：backend 用 MySQL service container 跑全量（含真库与覆盖率门槛），
+  frontend 装依赖跑 `pnpm run verify`（format:check + lint + typecheck + test + build）。
+  本地与 CI 走**同一条命令**（`make verify-frontend`），才不会出现"本地绿、CI 红"。
 
 "哪些是样例替身、真实项目该怎么做"见 [README.md](README.md) 的样例替身清单。
 
