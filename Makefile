@@ -14,6 +14,7 @@ verify-backend: ## 只跑后端：格式化 + Checkstyle + ArchUnit + 测试（�
 	cd backend && ./mvnw -B -Pcoverage-check verify
 
 verify-frontend: ## 只跑前端：格式检查 + lint + 类型 + 测试 + 构建
+	@[ -d frontend/node_modules ] || (echo "==> 首次运行，先装前端依赖" && cd frontend && pnpm install --frozen-lockfile)
 	cd frontend && pnpm run verify
 
 dev: ## 并行起后端(:8080)与前端(:5173，/api 代理到后端)

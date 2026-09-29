@@ -18,6 +18,12 @@ run() {
 run "后端：格式化 + Checkstyle + ArchUnit + 测试（含真库）+ 覆盖率门槛" \
     bash -c 'cd backend && ./mvnw -B -Pcoverage-check verify'
 
+if [ ! -d frontend/node_modules ]; then
+    echo
+    echo "==================== 前端：首次运行，先装依赖 ===================="
+    (cd frontend && pnpm install --frozen-lockfile)
+fi
+
 run "前端：格式检查 + lint + 类型 + 测试 + 构建" \
     bash -c 'cd frontend && pnpm run verify'
 

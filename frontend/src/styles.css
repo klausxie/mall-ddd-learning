@@ -1,0 +1,103 @@
+:root {
+  color-scheme: light;
+  font-family:
+    system-ui,
+    -apple-system,
+    'PingFang SC',
+    'Microsoft YaHei',
+    sans-serif;
+  line-height: 1.6;
+  color: #1f2328;
+  background: #f6f7f9;
+}
+
+body {
+  margin: 0;
+}
+
+.card,
+.page {
+  max-width: 640px;
+  margin: 48px auto;
+  padding: 24px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 8%);
+}
+
+form {
+  display: grid;
+  gap: 8px;
+}
+
+input,
+button {
+  font: inherit;
+  padding: 8px 10px;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+}
+
+button {
+  cursor: pointer;
+  background: #1f6feb;
+  color: #fff;
+  border-color: #1f6feb;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.address-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.address-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid #eaeef2;
+  border-radius: 6px;
+}
+
+.address-main {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.link-danger {
+  background: transparent;
+  color: #cf222e;
+  border-color: #cf222e;
+}
+
+.error {
+  color: #cf222e;
+}
+
+.empty,
+.hint {
+  color: #59636e;
+}
+
+.address-form {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #eaeef2;
+}
