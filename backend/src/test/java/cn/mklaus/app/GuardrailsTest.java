@@ -90,6 +90,8 @@ class GuardrailsTest {
 
         String workflow = read("../.github/workflows/verify.yml");
         assertContains(workflow, "-Pcoverage-check", "CI 不再跑覆盖率门槛");
+        // 前端那一档同理：删掉它，前端就悄悄失去 CI 覆盖，而本地单跑后端不会有任何感觉
+        assertContains(workflow, "pnpm run verify", "CI 里没有前端那一档（pnpm run verify）：前端失去了 CI 覆盖");
         for (String flag : List.of("-Dspotless.check.skip=false", "-Dcheckstyle.skip=false")) {
             assertContains(workflow, flag,
                 "CI 缺少防跳过参数 " + flag + "：.mvn/maven.config 里的 skip 就没人压得住了（实测过）");
