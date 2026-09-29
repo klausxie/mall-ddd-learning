@@ -50,24 +50,34 @@ curl -s 'localhost:8080/address/page?curPage=1&pageSize=10' -H 'X-Operator-Id: 1
 ## 验证
 
 ```bash
-./mvnw verify      # 格式 + 规范 + 架构 + 单测，不需要数据库
+./mvnw verify      # 格式 + 规范 + 架构 + 单测 + domain 覆盖率地板，不需要数据库
 ```
 
-真库测试默认**跳过**，需要显式给密码（它们都在事务里跑，结束自动回滚）。
-连自己的库时要带上 `local` profile；这就是 CI 的跑法，顺便校验覆盖率门槛（行覆盖 ≥ 80%）：
+真库测试的开关**只有一个**：数据源配了密码就跑，没配就跳过（跳过时控制台会打印原因，不会静默）。
+所以下面两种配法等价，任选其一。数据在事务里跑完自动回滚，但 **Flyway 的建表 / 迁移不回滚**：
 
 ```bash
-MALL_DB_PASSWORD='<你的密码>' ./mvnw clean verify -Pcoverage-check -Dspring.profiles.active=local
+# ① 环境变量（CI 用的就是这种；也是 docker compose 那套账号）
+MALL_DB_USERNAME=klaus MALL_DB_PASSWORD=klaus ./mvnw clean verify -Pcoverage-check
+# ② 凭证写在 application-local.yaml，用 local profile 载入
+./mvnw clean verify -Pcoverage-check -Dspring.profiles.active=local
 # 覆盖率报告：target/site/jacoco/index.html
 ```
+
+`-Pcoverage-check` 打开行覆盖 ≥ 80% 的门槛，它跟真库测试一起跑，所以上面两条命令都需要能连上库。
+连自己的库时**只指向本地或你专属的库**——Flyway 会在那个库上建表 / 迁移。
+
+没有本地库时不必强求：默认的 `./mvnw verify` 不需要数据库，已覆盖格式化、Checkstyle、ArchUnit、单测与 domain 覆盖率地板。
 
 | 测试 | 覆盖 |
 |---|---|
 | `ArchitectureTest` | 分层、依赖方向、命名、断言归属等 12 条架构规则 |
+| `GuardrailsTest` | 护栏自检：真的跑一遍 Checkstyle 确认规则会报错，外加 pom / CI 参数没被改弱（不需要 DB） |
 | `MapperStatementsTest` | Mapper 接口方法与 XML statement 一一对应（不需要 DB） |
+| `EntityMappingTest` | 实体字段 ↔ resultMap / INSERT / UPDATE ↔ 建表列 对账（不需要 DB） |
 | `ApplicationContextTest` | Bean 装配 + Mapper XML 解析（不需要 DB） |
 | 各 `*Test` 单测 | Spec / Policy / 密码哈希 / 分页 / 上下文 / 地址归属等 |
-| `MapperSmokeTest`、`*ApiTest` | 真库 SQL 与 HTTP 端到端（`MALL_DB_PASSWORD` 打开） |
+| `MapperSmokeTest`、`*ApiTest` | 真库 SQL 与 HTTP 端到端（数据源配了密码才跑，跳过会说明原因） |
 
 ## 接口一览
 

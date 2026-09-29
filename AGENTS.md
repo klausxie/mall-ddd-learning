@@ -17,7 +17,10 @@
 - 不要从 `pom.xml` 移除 spotless / checkstyle / archunit；
 - 不要用 `-Dspotless.check.skip` / `-Dcheckstyle.skip` / `-DskipTests` 绕过。
 
-确实认为规则要调整，先说清理由并征求确认，再同时更新规则文件与文档。
+上面三条有机器兜底：`GuardrailsTest`（跑在 `./mvnw verify` 里）会在规则文件、pom 的检查插件
+或 CI 参数被改弱时直接失败——它对任何工具都生效，不依赖某个 harness 的钩子。
+
+确实认为规则要调整，先说清理由并征求确认，再同时更新规则文件、`GuardrailsTest` 与文档。
 
 ## 硬性约束（违反会直接让 verify 失败）
 
@@ -41,10 +44,15 @@ web ──► application ──► domain ──► common
 
 ## 真库测试
 
-真库测试默认跳过（需要能连上库；建表由 Flyway 在上下文启动时完成）：
+数据源配了密码就跑（`MALL_DB_PASSWORD` 环境变量，或 local profile 的 `application-local.yaml`，
+二者等价）；没配则跳过并打印原因。它们都带 `@Transactional`，数据自动回滚，
+但 **Flyway 的建表 / 迁移不回滚**，所以只能指向本地或你专属的库。
+命令、两种配法与注意事项见 README「验证」。
 
-```bash
-MALL_DB_PASSWORD='<密码>' ./mvnw test -Dtest='MapperSmokeTest,UserRegisterApiTest,AddressApiTest'
-```
+## 提交
 
-它们都带 `@Transactional`，跑完自动回滚，不会留数据。
+`Conventional Commits` + 中文描述：`feat:` / `fix:` / `docs:` / `test:` / `refactor:` / `chore:`，
+**一次提交只做一件事**。详见 CLAUDE.md 的「提交约定」。
+
+凭证只放 `application-local.yaml`（`.gitignore` 已覆盖，别用 `git add -f`）；
+提交进仓库的凭证删不掉、只能换——`GuardrailsTest` 会守着这两条。

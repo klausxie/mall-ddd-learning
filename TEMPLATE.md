@@ -34,7 +34,7 @@ git clone <模板仓库> order-service && cd order-service
 
 按顺序确认，每条都能在 2 分钟内做完：
 
-- [ ] `./mvnw clean verify` 绿（12 条架构规则 + 单测 + 格式化 + Checkstyle）
+- [ ] `./mvnw clean verify` 绿（12 条架构规则 + 护栏自检 + 单测 + domain 覆盖率地板 + 格式化 + Checkstyle）
 - [ ] `pom.xml`：artifactId / groupId 已是新项目；`java.version` 与团队 JDK 一致
 - [ ] `docker-compose.yml`：库名、账号、端口是否符合团队习惯
 - [ ] `src/main/resources/application.yaml`：默认数据源指向本地；**确认里面没有任何真实凭证**
@@ -50,7 +50,7 @@ git clone <模板仓库> order-service && cd order-service
 |---|---|---|
 | 短信验证码 | `mall.captcha.fixed-code=123456` 固定码 | 生成随机码、调短信网关、Redis 存 5 分钟 |
 | 鉴权 | `X-Operator-Id` 请求头写入 `Context` | 解析 token / session；无身份由过滤器直接拒绝 |
-| 消息队列 | `ApplicationEventPublisher` 只打日志并把事件转给 Spring 事件总线；`AfterCommitEventPublisher` 保证**提交后**才发 | 投递真实 MQ，并保证幂等与重试（保留提交后发布的语义） |
+| 消息队列 | `infrastructure/event/SpringEventPublisher` 只打日志并把事件转给 Spring 事件总线，`publishAfterCommit` 保证**提交后**才发 | 投递真实 MQ，并保证幂等与重试（保留提交后发布的语义） |
 | 积分 | `RegistrationPointsPolicy` 纯计算 + 事件 | 账户服务消费事件并落库 |
 | 密码哈希 | JDK 自带 PBKDF2（零第三方加密依赖） | 可换 BCrypt / Argon2，只改 `infrastructure/security` 实现类 |
 
@@ -91,6 +91,11 @@ git clone <模板仓库> order-service && cd order-service
 ## 六、常见坑
 
 - `application-local.yaml` 已在 `.gitignore` 里，**不要把凭证写进 `application.yaml`**。
+- 凭证**一旦提交进仓库就删不掉**（它留在 git 历史里）：只能先换凭证，再谈清历史。
+  所以本地凭证只放 `application-local.yaml`、主配置只放 `${MALL_DB_PASSWORD:}` 占位符——
+  这两条由 `GuardrailsTest` 守着。
 - 改了分层或新增文件种类，**同步更新 `ARCHITECTURE.md` 与 `ArchitectureTest`**，并按 `ARCHITECTURE.md` §六 的顺序（先文档、再规则、再代码）。
 - `ArchitectureTest` 的包名从 `Application` 推导，不要改回硬编码——否则改名脚本要改几十处、必漏。
-- 检查失败时**改代码，不要改规则**；确实要调整规则，先说明理由并同时更新规则文件与文档。
+- 检查失败时**改代码，不要改规则**；确实要调整规则，先说明理由并同时更新规则文件、`GuardrailsTest` 与文档。
+- 新项目若重写 `config/checkstyle.xml`，`GuardrailsTest` 会红——这是**故意的**（防的就是"顺手把规则改弱"）。
+  要么把新规则补进该测试的清单，要么按上一条流程改它。

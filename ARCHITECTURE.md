@@ -23,14 +23,12 @@ src/main/java/cn/mklaus/app/
 ├── application/                  【应用层】编排用例、事务边界
 │   └── <业务>/
 │       ├── command/                  写操作（增删改）
-│       │   ├── XxxCmdService.java            接口
-│       │   ├── XxxCmdServiceImpl.java        实现
+│       │   ├── XxxCmdService.java            @Service + @Transactional，只编排
 │       │   ├── assembler/                    请求对象 → 领域对象
 │       │   ├── request/                      写操作请求 DTO
 │       │   └── response/                     写操作响应模型（如注册结果）
 │       └── query/                    读操作
 │           ├── XxxQueryService.java
-│           ├── XxxQueryServiceImpl.java
 │           ├── request/                      查询请求 DTO
 │           └── response/                     响应模型 XxxInfo（领域实体不直接出接口）
 │
@@ -40,7 +38,7 @@ src/main/java/cn/mklaus/app/
 │       ├── User / Address / ...              实体，自带永远成立的不变量校验方法
 │       ├── XxxValidator.java                 单实体校验（需要查库的规则放这里）
 │       ├── XxxErrorCode.java                 本业务的错误码与信息模板
-│       ├── spec/                             按用例生效的可组合约束 XxxSpec
+│       ├── spec/                             按用例生效的具名约束 XxxSpec
 │       ├── <能力>/XxxPolicy.java             条件 → 数值的业务策略
 │       ├── XxxService.java                   跨实体的领域服务
 │       ├── XxxMapper.java                    持久化接口（⚠️ 见"已知偏差"）
@@ -59,6 +57,28 @@ src/main/java/cn/mklaus/app/
 │
 └── configuration/                框架配置（异常处理器等）
 ```
+
+### 一次请求的调用链（照这条线读代码最快）
+
+以 `POST /address/create` 为例，从 HTTP 到表一共 7 个点，每格只管一件事：
+
+```
+POST /address/create
+└─ web/AddressController.createAddress              只转发；@Valid 管请求体格式
+   └─ application/user/command/UserCmdService   编排 + 事务边界（@Transactional 在类上）
+      ├─ .../command/assembler/UserAssembler        request → 领域对象（不做业务判断）
+      ├─ domain/user/Address.validate()             实体不变量：永远成立的那些
+      │  └─ common/exception/Asserts.state()        不满足就抛 ErrorCodeException（自带业务错误码）
+      └─ domain/user/AddressMapper.saveAddress()    只声明接口，SQL 在 resources/mapper/*.xml
+         └─ db/migration/V1__init_schema.sql        表结构；列必须与 resultMap 一一对应
+```
+
+读接口走 `UserQueryService` + `.../query/response/AddressInfo`（响应模型不出领域实体）；
+失败出口统一在 `configuration/GlobalExceptionHandler`（HTTP 状态恒 200，靠 body.code 区分）。
+
+按这条线找不到某条规则时，按"规则种类"对号入座：实体不变量 → 实体自身的 `validate()`；
+按用例生效的约束 → `domain/<业务>/spec`；条件 → 数值 → `domain/<业务>/<能力>/*Policy`；
+需要查库的校验 → `domain/<业务>/*Validator`。
 
 ## 二、新文件放哪里
 
@@ -84,12 +104,12 @@ src/main/java/cn/mklaus/app/
 
 ### 规格（Specification）怎么用
 
-`Spec<T>`（`common/spec`）把一条业务约束建模成具名、可组合、可单独测试的对象；
+`Spec<T>`（`common/spec`）把一条业务约束建模成具名、可单独测试的对象；
 不满足时给出「违规原因」（错误码 + 信息模板参数），由 `Specs.assertSatisfied` 转成统一的
 `ErrorCodeException`，因此错误码和信息都由规则自己拥有，调用方只负责决定"什么时候查"。
 
-- **该用**：同一条规则要被多个用例引用（"必须成年"注册、下单、领券都要查），
-  或规则需要按业务拼装（`and` / `or` / `not`）。
+- **该用**：同一条规则要被多个用例引用（"必须成年"注册、下单、领券都要查）。
+  接口只有一个 `violation(T)`；确实需要把多条约束拼装时再加组合子，别提前预置没人用的 API。
 - **不该用**：永远成立的实体不变量 → 实体 `validate()`；
   一次性检查 → `Asserts.state(condition, errorCode, args...)`；需要查库 → `XxxValidator`。
 - **禁止 spec-as-query**：规格只表达纯业务规则，不得生成 SQL / MyBatis-Plus 条件，
@@ -155,6 +175,8 @@ web ──────────► application ──────────
 | 测试 | 需要数据库 | 覆盖 |
 |---|---|---|
 | `ArchitectureTest` | 否 | 分层、依赖方向、命名、断言归属等架构规则 |
+| `GuardrailsTest` | 否 | 护栏自检：真的跑一遍 Checkstyle 验证规则会报错，外加 pom / CI 参数没被改弱 |
+| `EntityMappingTest` | 否 | 实体字段 ↔ resultMap / INSERT / UPDATE ↔ 建表列 对账 |
 | `MapperStatementsTest` | 否 | Mapper 接口方法 ↔ XML statement 一一对账 |
 | `ApplicationContextTest` | 否 | Bean 装配 + Mapper XML 解析 + Controller 注册 |
 | 领域 / 基础设施单测 | 否 | Spec / Policy / 密码哈希 / 分页 / 上下文 |
@@ -162,10 +184,16 @@ web ──────────► application ──────────
 | `UserRegisterApiTest`、`AddressApiTest` | 是 | HTTP 端到端：注册送积分、地址增删改查与分页 |
 
 - `./mvnw verify` 只跑前四类，几秒出结果，**不需要数据库**；
-- 真库测试默认跳过，由 `MALL_DB_PASSWORD` 打开，且都带 `@Transactional`，跑完自动回滚；
-- 覆盖率门槛在 `coverage-check` profile 里（行覆盖 ≥ 80%），只跟真库测试一起跑：
-  `MALL_DB_PASSWORD=xxx ./mvnw clean verify -Pcoverage-check -Dspring.profiles.active=local`，
-  报告在 `target/site/jacoco/index.html`；
+- 真库测试的开关只有一个（`support/EnabledIfDatabaseConfigured`）：数据源配了密码就跑，没配则跳过并打印原因。
+  环境变量 `MALL_DB_PASSWORD` 与 local profile 的 `application-local.yaml` 任配其一；它们都带 `@Transactional`，跑完自动回滚；
+- 覆盖率分两档，报告都在 `target/site/jacoco/index.html`：
+  - **默认 verify**：`domain` 每个包的行覆盖 ≥ 70%（`jacoco.domain.line.coverage.min`）。
+    domain 是纯规则、单测就能覆盖，所以这条地板不需要数据库；逐包评估，
+    "新加一个 domain 包却没写单测"藏不住；
+  - **`coverage-check` profile**：全局行覆盖 ≥ 80%（`jacoco.line.coverage.min`），带真库测试跑，
+    CI 用这条：`MALL_DB_USERNAME=klaus MALL_DB_PASSWORD=klaus ./mvnw clean verify -Pcoverage-check`；
+  - `jacoco-prepare-agent` 关掉了 `append`：它默认是 `true`，会让 `jacoco.exec` 跨构建累加，
+    门槛被上一次构建的数据喂饱（实测"删掉单测"都不报），关掉之后不依赖 `clean` 也可信；
 - CI（`.github/workflows/verify.yml`）用 MySQL service container 跑全量，包括真库测试与覆盖率门槛。
 
 "哪些是样例替身、真实项目该怎么做"见 [README.md](README.md) 的样例替身清单。

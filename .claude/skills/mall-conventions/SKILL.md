@@ -28,7 +28,7 @@ description: mall 项目的开发规范细节。新增或修改接口、请求�
 
 ## 二、分页模板
 
-请求对象继承 `Pageable`，直接复用 `curPage` / `pageSize` / `needTotal`：
+请求对象继承 `Pageable`，直接复用 `curPage` / `pageSize`：
 
 ```java
 @Data
@@ -72,8 +72,8 @@ web → application → domain → common
 
 - [ ] `application/user/command/request/AddressCreateRequest.java` —— 请求 DTO，`@Data` + 必填校验注解
 - [ ] `application/user/query/response/AddressInfo.java` —— 响应模型，**不要把领域实体直接返回**
-- [ ] 在 `UserCmdService` 加方法声明
-- [ ] 在 `UserCmdServiceImpl` 实现，**只编排**，业务规则放 `domain`
+- [ ] 在 `UserCmdService` 加方法，**只编排**，业务规则放 `domain`
+      （`application` 层不拆接口/实现：只有一个实现时那层接口是纯仪式）
 - [ ] 业务规则写在实体方法（如 `Address.validate()` / `assertOwnedBy()`）、`UserValidator`、
       `XxxSpec`（判断是不是）或 `XxxPolicy`（算出一个值）
 - [ ] `web/AddressController` 加 `@PostMapping("create")`，返回 `Response<AddressInfo>`
@@ -95,7 +95,7 @@ public Response<AddressInfo> createAddress(@Valid @RequestBody AddressCreateRequ
 // application 层的 Service 用 @Service，assembler / domain / infrastructure 用 @Component
 @Service
 @AllArgsConstructor
-public class UserQueryServiceImpl implements UserQueryService {
+public class UserQueryService {
 
     private final UserMapper userMapper;
 }
