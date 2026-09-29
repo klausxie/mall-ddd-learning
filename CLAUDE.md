@@ -86,6 +86,9 @@ MALL_DB_USERNAME=klaus MALL_DB_PASSWORD='<密码>' ./mvnw clean verify -Pcoverag
 上面这几条有 `GuardrailsTest` 兜底：它在 `./mvnw verify` 里校验规则文件、pom 里的检查插件和 CI
 参数没被改弱，所以"改规则让检查通过"过不了 verify。
 
+护栏本身也**封顶**：护栏类代码（`GuardrailsTest` / `EntityMappingTest` / 钩子 / 真库开关）总量不超过
+主代码的 40%，要加一条新检查就先合并或删掉一条价值更低的。见 ARCHITECTURE.md §五。
+
 确实认为规则本身需要调整时，**先说明理由并征求确认**，然后同时更新规则文件、`GuardrailsTest` 和本文件。
 
 ## 提交约定

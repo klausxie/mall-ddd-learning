@@ -18,27 +18,25 @@ import java.util.List;
  *
  * <p>
  * JUnit 的条件在 **Spring 容器启动之前**求值（必须如此：没库时容器会因为 Flyway / 连接池 fail-fast
- * 直接崩，轮不到跳过），那时拿不到 Spring 的 {@code Environment}。所以这里自己按**与应用相同的优先级**
- * 解析一遍数据源配置：
+ * 直接崩，轮不到跳过），那时拿不到 Spring 的 {@code Environment}。所以这里按**与应用相同的优先级**
+ * 自己解析一遍：环境变量 / 系统属性（{@link StandardEnvironment} 自带，含
+ * {@code SPRING_DATASOURCE_PASSWORD} 这类松散绑定）&gt; 各激活 profile 的
+ * {@code application-<profile>.yaml} &gt; {@code application.yaml}（{@code ${MALL_DB_PASSWORD:}} 占位符
+ * 也由它统一解析）。
  *
- * <pre>
- * 系统属性 / 环境变量  &gt;  application-local.yaml（仅 local profile）  &gt;  application.yaml
- * </pre>
- *
- * 环境变量这一层是 Spring 的 {@link StandardEnvironment} 自带的（含
- * {@code SPRING_DATASOURCE_PASSWORD} 这类松散绑定），{@code application.yaml} 里的
- * {@code ${MALL_DB_PASSWORD:}} 占位符也由它统一解析，因此：
+ * <p>
+ * 效果：
  *
  * <ul>
  * <li>配了 {@code MALL_DB_PASSWORD} → 跑；</li>
- * <li>用 local profile + {@code application-local.yaml} 填了密码 → 也跑；</li>
- * <li>两者都没有 → 跳过，并把原因写进日志与 skip reason。</li>
+ * <li>任意 profile（{@code local} / {@code dev} / …）的 {@code application-<profile>.yaml} 填了密码 → 也跑；</li>
+ * <li>都没有 → 跳过，并把原因写进日志与 skip reason。</li>
  * </ul>
  *
  * <p>
- * 有意保留的简化：profile 只从环境变量 / 系统属性判定（即 {@code -Dspring.profiles.active=local}
- * 或 {@code SPRING_PROFILES_ACTIVE=local}，项目文档里就是这么用的），不支持在 YAML 内部声明
- * {@code spring.profiles.active}；多文档 YAML 与 {@code spring.config.activate.on-profile} 同理。
+ * 有意保留的简化：profile 只从环境变量 / 系统属性判定（即 {@code -Dspring.profiles.active=dev}
+ * 或 {@code SPRING_PROFILES_ACTIVE=dev}），不支持在 YAML 内部声明 {@code spring.profiles.active}；多文档 YAML 与
+ * {@code spring.config.activate.on-profile} 同理。
  *
  * @author klaus
  * @since 2026/9/29
@@ -50,10 +48,6 @@ public class DatabaseConfiguredCondition implements ExecutionCondition {
 
     private static final String ACTIVE_PROFILES = "spring.profiles.active";
 
-    private static final String LOCAL_PROFILE = "local";
-
-    private static final String LOCAL_CONFIG = "application-local.yaml";
-
     private static final String BASE_CONFIG = "application.yaml";
 
     @Override
@@ -61,7 +55,8 @@ public class DatabaseConfiguredCondition implements ExecutionCondition {
         String password = resolveDataSourcePassword();
         if (password == null || password.isBlank()) {
             String reason = "真库测试跳过：没有解析到 " + DATASOURCE_PASSWORD + "。两种等价的配法——"
-                + "① 给环境变量 MALL_DB_PASSWORD；② 用 local profile 的 application-local.yaml。见 README「验证」一节。";
+                + "① 给环境变量 MALL_DB_PASSWORD；② 在 application-<profile>.yaml 里填密码并激活该 profile"
+                + "（如 application-local.yaml + -Dspring.profiles.active=local）。见 README「验证」一节。";
             log.warn(reason);
             return ConditionEvaluationResult.disabled(reason);
         }
@@ -70,25 +65,31 @@ public class DatabaseConfiguredCondition implements ExecutionCondition {
     }
 
     /**
-     * 按与应用一致的优先级解析数据源密码。
+     * 按与应用一致的优先级解析数据源密码：环境变量 / 系统属性 &gt; application-&lt;profile&gt;.yaml &gt; application.yaml。
+     *
+     * <p>
+     * 每个激活的 profile 都试一遍（不写死 {@code local}）：否则换个 profile 名就会"有密码却静默跳过"。
+     * 多个 profile 时按 Spring 的"后者优先"语义，倒序加入。
      */
     static String resolveDataSourcePassword() {
         StandardEnvironment environment = new StandardEnvironment();
-        // addLast = 放到最低优先级，所以"先加 local、再加 base"，让 local 压过 base、环境变量压过两者
-        if (hasLocalProfile(environment.getProperty(ACTIVE_PROFILES))) {
-            addYaml(environment, LOCAL_CONFIG);
+        List<String> profiles = activeProfiles(environment.getProperty(ACTIVE_PROFILES));
+        // addLast = 放到最低优先级：先加低优先级的，最后加 application.yaml
+        for (int index = profiles.size() - 1; index >= 0; index--) {
+            addYaml(environment, "application-" + profiles.get(index) + ".yaml");
         }
         addYaml(environment, BASE_CONFIG);
         return environment.getProperty(DATASOURCE_PASSWORD);
     }
 
-    private static boolean hasLocalProfile(String activeProfiles) {
+    private static List<String> activeProfiles(String activeProfiles) {
         if (activeProfiles == null || activeProfiles.isBlank()) {
-            return false;
+            return List.of();
         }
         return Arrays.stream(activeProfiles.split(","))
             .map(String::trim)
-            .anyMatch(LOCAL_PROFILE::equals);
+            .filter(profile -> !profile.isEmpty())
+            .toList();
     }
 
     private static void addYaml(StandardEnvironment environment, String location) {

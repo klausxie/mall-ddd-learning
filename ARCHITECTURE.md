@@ -199,8 +199,12 @@ web ──────────► application ──────────
 | `UserRegisterApiTest`、`AddressApiTest` | 是 | HTTP 端到端：注册送积分、地址增删改查与分页 |
 
 - `./mvnw verify` 只跑前四类，几秒出结果，**不需要数据库**；
+- **护栏封顶**：护栏类代码（`GuardrailsTest` + `EntityMappingTest` + `.claude/hooks` + 探针样本 +
+  真库开关的 `support/`）总量不超过主代码的 40%（当前 700 / 1803 ≈ 38%）。要加一条新检查，
+  先合并或删掉一条价值更低的——否则护栏会自己长成第二套代码库；
 - 真库测试的开关只有一个（`support/EnabledIfDatabaseConfigured`）：数据源配了密码就跑，没配则跳过并打印原因。
-  环境变量 `MALL_DB_PASSWORD` 与 local profile 的 `application-local.yaml` 任配其一；它们都带 `@Transactional`，跑完自动回滚；
+  环境变量 `MALL_DB_PASSWORD` 与任意 profile 的 `application-<profile>.yaml` 任配其一；
+  它们都带 `@Transactional`，跑完自动回滚；
 - 覆盖率分两档，报告都在 `target/site/jacoco/index.html`：
   - **默认 verify**：`domain` 每个包的行覆盖 ≥ 70%（`jacoco.domain.line.coverage.min`）。
     domain 是纯规则、单测就能覆盖，所以这条地板不需要数据库；逐包评估，

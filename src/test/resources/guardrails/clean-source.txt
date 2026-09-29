@@ -1,10 +1,6 @@
 package cn.mklaus.app.probe;
 
-/**
- * 探针样本：完全合法的最小类。
- *
- * GuardrailsTest 用它确认规则没有"见谁都报错"（例如 severity 被整体改坏、或配置里加了会误报的模块）。
- */
+/** 探针样本：完全合法的最小类，用来确认规则没有"见谁都报错"。 */
 public class GuardrailsProbe {
 
     private int value;

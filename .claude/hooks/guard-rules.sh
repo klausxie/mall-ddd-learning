@@ -18,15 +18,12 @@ find_node() {
         printf '%s\n' "$found"
         return 0
     }
-    for candidate in \
-        /usr/local/bin/node \
-        /opt/homebrew/bin/node \
-        /usr/bin/node \
-        "$HOME/.nvm/versions/node"/*/bin/node; do
-        if [ -x "$candidate" ]; then
+    for candidate in /usr/local/bin/node /opt/homebrew/bin/node /usr/bin/node \
+        "$HOME"/.nvm/versions/node/*/bin/node; do
+        [ -x "$candidate" ] && {
             printf '%s\n' "$candidate"
             return 0
-        fi
+        }
     done
     return 1
 }
