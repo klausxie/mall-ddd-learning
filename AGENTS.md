@@ -9,7 +9,7 @@
 ./mvnw verify
 ```
 
-它包含格式化检查、Checkstyle、ArchUnit 架构规则、69 个用例（含真库端到端）和 domain 覆盖率地板。
+它包含格式化检查、Checkstyle、ArchUnit 架构规则、89 个用例（含真库端到端）和 domain 覆盖率地板。
 
 但**别每改一行就跑它**：18 秒里约 15 秒是固定开销（Maven 启动、Spring 上下文、容器启动），跟改动大小无关。
 按这个节奏迭代：

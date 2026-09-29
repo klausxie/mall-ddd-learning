@@ -8,7 +8,7 @@ Spring Boot 3.5 + MyBatis-Plus + JDK 17 的单体 Java 项目。
 ./mvnw verify                      # 完整校验：格式化 + Checkstyle + ArchUnit + 单测 + 真库端到端（三级自动置备）
 ./mvnw spotless:apply              # 只做格式化（本地改完代码先跑这个）
 ./mvnw spring-boot:run             # 启动（默认 8080）
-# 再加"全局行覆盖 ≥ 80%"的门槛（CI 同款）；连自己的库用 MALL_DB_* 或 -Dspring.profiles.active=local：
+# 再加"全局行覆盖 ≥ 80%"的门槛（CI 同款）；连自己的库用 APP_DB_* 或 -Dspring.profiles.active=local：
 ./mvnw clean verify -Pcoverage-check
 ```
 
@@ -23,8 +23,8 @@ Spring Boot 3.5 + MyBatis-Plus + JDK 17 的单体 Java 项目。
 数据库连接串从环境变量取；本地调试需要：
 
 ```bash
-export MALL_DB_PASSWORD='<密码>'
-export MALL_DB_USERNAME='klaus'    # 可选，默认 klaus
+export APP_DB_PASSWORD='<密码>'
+export APP_DB_USERNAME='klaus'    # 可选，默认 klaus
 ```
 
 或把凭证写进 `src/main/resources/application-local.yaml`（已在 `.gitignore` 里，模板见
@@ -36,7 +36,7 @@ export MALL_DB_USERNAME='klaus'    # 可选，默认 klaus
 
 ```bash
 ./mvnw verify                                                                          # 三级自动置备
-MALL_DB_USERNAME=klaus MALL_DB_PASSWORD='<密码>' ./mvnw clean verify -Pcoverage-check   # 连你自己的库
+APP_DB_USERNAME=klaus APP_DB_PASSWORD='<密码>' ./mvnw clean verify -Pcoverage-check   # 连你自己的库
 ```
 
 凭证放在 `application-local.yaml` 时改加 `-Dspring.profiles.active=local`。详见 README「验证」。
@@ -117,7 +117,10 @@ chore: 升级 spring-boot 到 3.5.1
 
 ## 凭证与配置
 
+- 应用配置一律挂在**固定的 `app.*` 前缀**下（如 `app.auth.token-ttl`、`app.captcha.fixed-code`），
+  覆盖用的环境变量同样固定（连库 `APP_DB_*`、签名密钥 `APP_AUTH_TOKEN_SECRET`）：这些前缀都不随项目改名，
+  于是改名脚本不必去改写 Java / 文档里的 `@Value` 引用，也不会出现"代码读的前缀和配置里写的对不上"这种静默失效。
 - 凭证只放 `src/main/resources/application-local.yaml`（已在 `.gitignore` 里，**不要**用 `git add -f` 强加）；
-  主配置里只允许 `${MALL_DB_PASSWORD:}` 这类占位符。
+  主配置里只允许 `${APP_DB_PASSWORD:}` 这类占位符。
 - 凭证**一旦提交进仓库就删不掉**——它留在 git 历史里。真发生了，处置顺序是：① 换凭证（必须）；② 再谈清历史。
   `GuardrailsTest` 会守住上面这两条。

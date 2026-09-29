@@ -23,7 +23,7 @@
 # 在模板仓库点 "Use this template" 建新仓，或直接复制跟踪文件
 git clone <模板仓库> order-service && cd order-service
 
-# 一条命令改名（包名 / 坐标 / 配置前缀 / 环境变量前缀）
+# 一条命令改名（包名 / 坐标 / 数据库名；配置前缀 app 与环境变量 APP_* 都固定，不改）
 ./scripts/init.sh cn.acme order-service cn.acme.order
 
 # 骨架自检：这一步必须绿，之后再写业务
@@ -37,7 +37,7 @@ git clone <模板仓库> order-service && cd order-service
 
 | 参数 | 作用 |
 |---|---|
-| `[configPrefix]` | 配置前缀，默认取 artifactId 第一段（`order-service` → `order`） |
+| `[dbName]` | 数据库名（compose 建的库 + JDBC URL 里的库名），默认取 artifactId 第一段（`order-service` → `order`） |
 | `--yes` | 免确认，适合脚本化 |
 | `--force` | 跳过"工作区必须干净"的检查 |
 | `--reset-git` | 删掉 `.git` 重新 init（只 `git add`，不替你 commit） |
@@ -52,6 +52,8 @@ git clone <模板仓库> order-service && cd order-service
 - [ ] `pom.xml`：artifactId / groupId 已是新项目；`java.version` 与团队 JDK 一致
 - [ ] `docker-compose.yml`：库名、账号、端口是否符合团队习惯
 - [ ] `src/main/resources/application.yaml`：默认数据源指向本地；**确认里面没有任何真实凭证**
+- [ ] 鉴权：`APP_AUTH_TOKEN_SECRET` 已在部署环境注入；HTTPS 环境把 `app.auth.cookie-secure` 打开
+      （配置里的 `local-dev-secret` 只是样例替身）
 - [ ] `src/main/resources/application-local.yaml.example`：环境变量名已随项目改名（不再是模板的旧前缀）
 - [ ] `.github/workflows/verify.yml`：CI 用的库名/端口与 compose 一致
 - [ ] `src/main/resources/db/migration/V1__init_schema.sql`：删掉用不上的示例表；后续变更新增 `V2__xxx.sql`，**不要改已执行过的版本**
@@ -64,8 +66,8 @@ git clone <模板仓库> order-service && cd order-service
 
 | 能力 | 模板里的做法 | 真实项目 |
 |---|---|---|
-| 短信验证码 | `mall.captcha.fixed-code=123456` 固定码 | 生成随机码、调短信网关、Redis 存 5 分钟 |
-| 鉴权 | `X-Operator-Id` 请求头写入 `Context` | 解析 token / session；无身份由过滤器直接拒绝 |
+| 短信验证码 | `app.captcha.fixed-code=123456` 固定码 | 生成随机码、调短信网关、Redis 存 5 分钟 |
+| 鉴权 | 登录签发 HMAC 自签令牌，同一份令牌两种载体（`Authorization: Bearer` / HttpOnly Cookie + `SameSite=Lax`）；签名密钥默认 `local-dev-secret` | 密钥从环境变量（`APP_AUTH_TOKEN_SECRET`）/ 密钥管理注入；HTTPS 打开 `app.auth.cookie-secure`；共享子域再加 CSRF 令牌；需要主动吊销就把令牌改存 Redis（见 README「鉴权」） |
 | 消息队列 | `infrastructure/event/SpringEventPublisher` 只打日志并把事件转给 Spring 事件总线，`publishAfterCommit` 保证**提交后**才发 | 投递真实 MQ，并保证幂等与重试（保留提交后发布的语义） |
 | 积分 | `RegistrationPointsPolicy` 纯计算 + 事件 | 账户服务消费事件并落库 |
 | 密码哈希 | JDK 自带 PBKDF2（零第三方加密依赖） | 可换 BCrypt / Argon2，只改 `infrastructure/security` 实现类 |
@@ -140,7 +142,7 @@ git clone <模板仓库> order-service && cd order-service
 
 - `application-local.yaml` 已在 `.gitignore` 里，**不要把凭证写进 `application.yaml`**。
 - 凭证**一旦提交进仓库就删不掉**（它留在 git 历史里）：只能先换凭证，再谈清历史。
-  所以本地凭证只放 `application-local.yaml`、主配置只放 `${MALL_DB_PASSWORD:}` 占位符——
+  所以本地凭证只放 `application-local.yaml`、主配置只放 `${APP_DB_PASSWORD:}` 占位符——
   这两条由 `GuardrailsTest` 守着。
 - 改了分层或新增文件种类，**同步更新 `ARCHITECTURE.md` 与 `ArchitectureTest`**，并按 `ARCHITECTURE.md` §六 的顺序（先文档、再规则、再代码）。
 - `ArchitectureTest` 的包名从 `Application` 推导，不要改回硬编码——否则改名脚本要改几十处、必漏。

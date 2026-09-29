@@ -18,14 +18,19 @@ src/main/java/cn/mklaus/app/
 ├── Application.java              启动类
 │
 ├── web/                          【最外层】HTTP 入口
-│   └── XxxController.java            只做参数接收 + 调用 application，不写业务逻辑
+│   ├── XxxController.java            只做参数接收 + 调用 application，不写业务逻辑
+│   └── auth/                         凭证怎么来：过滤器 + 凭证解析器 + 令牌 Cookie
+│       ├── OperatorContextFilter.java    依次问各个解析器，把身份写进 Context
+│       ├── OperatorCredentialResolver.java  BearerCredentialResolver / CookieCredentialResolver
+│       └── TokenCookie.java              令牌 Cookie 的名字与属性（HttpOnly + SameSite=Lax）
 │
 ├── application/                  【应用层】编排用例、事务边界
 │   └── <业务>/
-│       ├── command/                  写操作（增删改）
+│       ├── command/                  写操作（增删改）与登录这类"POST 用例"
 │       │   ├── XxxCmdService.java            @Service + @Transactional，只编排
 │       │   ├── XxxRequest.java               写操作请求 DTO（与 Service 同包）
-│       │   └── XxxResponse.java              写操作响应模型（如注册结果）
+│       │   ├── XxxResponse.java              写操作响应模型（如注册结果）
+│       │   └── XxxAuthService.java           登录换令牌（不落库，所以不加 @Transactional）
 │       └── query/                    读操作
 │           ├── XxxQueryService.java
 │           ├── XxxPageRequest.java           查询请求 DTO（与 Service 同包）
@@ -46,10 +51,10 @@ src/main/java/cn/mklaus/app/
 ├── infrastructure/               【最外层】外部系统的具体实现
 │   ├── captcha/                              短信验证码
 │   ├── event/                                消息队列
-│   └── security/                             密码哈希等安全能力实现
+│   └── security/                             密码哈希 / 令牌签名等安全能力实现
 │
 ├── common/                       【公共设施】零业务依赖
-│   ├── auth/                                 Context / Operator
+│   ├── auth/                                 Context / Operator / TokenCodec（接口，实现放 infrastructure）
 │   ├── exception/                            错误码、统一异常、Violation
 │   ├── model/                                Response / Page / Pageable
 │   └── spec/                                 Spec 与 Specs（规格抽象，零业务依赖）
@@ -75,6 +80,13 @@ POST /address/create
 读接口走 `UserQueryService` + `.../query/AddressInfo`（响应模型不出领域实体）；
 失败出口统一在 `configuration/GlobalExceptionHandler`（HTTP 状态恒 200，靠 body.code 区分）。
 
+身份不走参数，走凭证：`web/auth/OperatorContextFilter` 依次问 `OperatorCredentialResolver` 的实现
+（`BearerCredentialResolver` 读 `Authorization: Bearer <token>`，`CookieCredentialResolver` 读 HttpOnly Cookie，
+`@Order` 决定优先级、第一个解析成功的生效），解析出的用户 ID 写进 `Context`；
+没有凭证 / 凭证非法就不写上下文，直到用例里 `Context.currentOperator()` 报"未登录"（40005）。
+凭证怎么传由 web 决定，令牌怎么签名在 `common/auth/TokenCodec`（实现 `infrastructure/security/HmacTokenCodec`）
+——换载体、换签名算法都不用动 `domain` / `application`。令牌本身由 `POST /user/login` 签发（同时回响应体并下发 Cookie）。
+
 按这条线找不到某条规则时，按"规则种类"对号入座：实体不变量 → 实体自身的 `validate()`；
 按用例生效的约束 → `domain/<业务>/spec`；条件 → 数值 → `domain/<业务>/<能力>/*Policy`；
 需要查库的校验 → `domain/<业务>/*Validator`。
@@ -96,6 +108,9 @@ POST /address/create
 | 跨实体业务规则 | `domain/<业务>/XxxService` | application（application 只编排） |
 | 数据库访问接口 | `domain/<业务>/XxxMapper` + `resources/mapper/XxxMapper.xml` | application |
 | 调外部系统（短信、MQ、缓存） | `infrastructure/<能力>/`，通过 `domain` 里的接口暴露 | domain 里直接 new |
+| 令牌的签发与校验 | 接口 `common/auth/TokenCodec` + 实现 `infrastructure/security/` | 在 web 过滤器里直接写验签（web 不得依赖 domain，算法也不该散落） |
+| 凭证的载体（Bearer 头 / Cookie / 以后的 session id） | `web/auth/OperatorCredentialResolver` 的一个实现，`@Order` 决定优先级 | 在过滤器里写 if-else；或让 application 感知凭证长什么样 |
+| 认证用例（登录换令牌） | `application/<业务>/command` 的 `XxxAuthService`，请求 / 响应模型同包 | 单开一个 `auth` 包（响应模型必须与 Service 同包，见 AGENTS.md） |
 | 统一响应 / 错误码 / 分页模型 / 规格抽象 | `common/model`、`common/exception`、`common/spec` | 各业务包各写一份 |
 | 只有一处用到的工具方法 | **就地放在使用它的包里** | 提前抽到 common |
 
@@ -193,15 +208,15 @@ web ──────────► application ──────────
 | `EntityMappingTest` | 否 | 实体字段 ↔ resultMap / INSERT / UPDATE ↔ 建表列 对账 |
 | `MapperStatementsTest` | 否 | Mapper 接口方法 ↔ XML statement 一一对账 |
 | `ApplicationContextTest` | 否 | Bean 装配 + Mapper XML 解析 + Controller 注册 |
-| 领域 / 基础设施单测 | 否 | Spec / Policy / 密码哈希 / 分页 / 上下文 |
+| 领域 / 基础设施单测 | 否 | Spec / Policy / 密码哈希 / 令牌签名 / 分页 / 上下文 |
 | `MapperSmokeTest` | 是 | 真库 SQL：与 Flyway 建的表对齐、自增回填、分页 |
-| `UserRegisterApiTest`、`AddressApiTest` | 是 | HTTP 端到端：注册送积分、地址增删改查与分页 |
+| `UserRegisterApiTest`、`UserLoginApiTest`、`AddressApiTest` | 是 | HTTP 端到端：注册送积分、登录换令牌（Bearer 头与 Cookie 两条路都走一遍）、地址增删改查与分页 |
 
-- `./mvnw verify` 只跑前四类，几秒出结果，**不需要数据库**；
+- `./mvnw verify` 跑上表全部用例（含真库，约 15–20 秒）：真库那一档不配任何东西也能跑（三级自动置备）；
 - **封顶（两个口径，分别报数）**：
   - **检查类护栏**（`GuardrailsTest` + `EntityMappingTest` + `.claude/hooks` + 探针样本）**≤ 主代码 40%**
-    （当前 564 / 1732 ≈ 32%）。要加一条新检查，先合并或删掉一条价值更低的；
-  - **测试基础设施**（`support/`：真库置备 + 标记注解）**≤ 15%**（当前 201 / 1732 ≈ 11%）。
+    （当前 564 / 2209 ≈ 25%）。要加一条新检查，先合并或删掉一条价值更低的；
+  - **测试基础设施**（`support/`：真库置备 + 标记注解）**≤ 15%**（当前 205 / 2209 ≈ 9%）。
     它不算护栏（不检查规范，只负责把库准备好），单独设限是为了别让它无限膨胀；
   - `scripts/`（`init.sh` / `facts.sh`）是工具，两个口径都不计入——既不检查规范，也不置备环境；
 - 真库测试（标了 `@RequiresRealDatabase` 的类）的数据源由 `support/RealDatabaseProvisioner` **三级置备**：
@@ -213,7 +228,7 @@ web ──────────► application ──────────
     domain 是纯规则、单测就能覆盖，这条地板只依赖单测（真库用例跑不跑都成立）；逐包评估，
     "新加一个 domain 包却没写单测"藏不住；
   - **`coverage-check` profile**：全局行覆盖 ≥ 80%（`jacoco.line.coverage.min`），带真库测试跑，
-    CI 用这条：`MALL_DB_USERNAME=klaus MALL_DB_PASSWORD=klaus ./mvnw clean verify -Pcoverage-check`；
+    CI 用这条：`APP_DB_USERNAME=klaus APP_DB_PASSWORD=klaus ./mvnw clean verify -Pcoverage-check`；
   - `jacoco-prepare-agent` 关掉了 `append`：它默认是 `true`，会让 `jacoco.exec` 跨构建累加，
     门槛被上一次构建的数据喂饱（实测"删掉单测"都不报），关掉之后不依赖 `clean` 也可信；
 - CI（`.github/workflows/verify.yml`）用 MySQL service container 跑全量，包括真库测试与覆盖率门槛。

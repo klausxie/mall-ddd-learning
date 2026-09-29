@@ -26,8 +26,8 @@ Spring Boot 3.5 + MyBatis-Plus + JDK 17 的 **AI + DDD 工程模板**：规范�
 docker compose up -d
 
 # 2. 配置数据源（compose 里就是 klaus/klaus；不配则用 application.yaml 的 localhost 默认值）
-export MALL_DB_USERNAME=klaus
-export MALL_DB_PASSWORD=klaus
+export APP_DB_USERNAME=klaus
+export APP_DB_PASSWORD=klaus
 
 # 3. 启动（默认 8080）
 ./mvnw spring-boot:run
@@ -49,10 +49,22 @@ curl -s -X POST localhost:8080/user/create -H 'Content-Type: application/json' \
 curl -s -X POST localhost:8080/user/create -H 'Content-Type: application/json' \
   -d '{"mobile":"13900000002","captcha":"123456","password":"Passw0rd!","age":29}'
 
-# 地址接口需要身份：样例用请求头 X-Operator-Id（值就是上一步返回的 user.id）
-curl -s -X POST localhost:8080/address/create -H 'X-Operator-Id: 1' -H 'Content-Type: application/json' \
+# 登录换令牌：响应体里有 token（给 App / 开放 API），同时下发 HttpOnly Cookie（给浏览器 / 后台）
+TOKEN=$(curl -s -c /tmp/cookies.txt -X POST localhost:8080/user/login -H 'Content-Type: application/json' \
+  -d '{"mobile":"13900000001","password":"Passw0rd!"}' | sed -E 's/.*"token":"([^"]+)".*/\1/')
+
+# 方式一：带 Authorization 头（App / 服务间调用）
+curl -s -X POST localhost:8080/address/create -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
   -d '{"recipient":"张三","phone":"13900000000","province":"广东省","city":"深圳市","district":"南山区","detail":"科技园 1 号"}'
-curl -s 'localhost:8080/address/page?curPage=1&pageSize=10' -H 'X-Operator-Id: 1'
+
+# 方式二：让浏览器带 Cookie（JS 读不到令牌，也就偷不走）；-b 复用上一步的 cookie jar
+curl -s -b /tmp/cookies.txt 'localhost:8080/address/page?curPage=1&pageSize=10'
+
+# 退出登录：清掉令牌 Cookie
+curl -s -b /tmp/cookies.txt -c /tmp/cookies.txt -X POST localhost:8080/user/logout
+
+# 不带凭证 → “未登录”（HTTP 仍是 200，靠 body.code=40005 区分）
+curl -s 'localhost:8080/address/page'
 ```
 
 ## 验证
@@ -65,15 +77,15 @@ curl -s 'localhost:8080/address/page?curPage=1&pageSize=10' -H 'X-Operator-Id: 1
 
 | 级别 | 条件 | 用哪个库 |
 |---|---|---|
-| ① | 你配了数据源 | 你的库：`MALL_DB_*` / `SPRING_DATASOURCE_*` 环境变量，或 `application-<profile>.yaml` 里的密码 |
+| ① | 你配了数据源 | 你的库：`APP_DB_*` / `SPRING_DATASOURCE_*` 环境变量，或 `application-<profile>.yaml` 里的密码 |
 | ② | 没配，但本机 Docker 可用 | 自动起一个 `mysql:8.0` 容器（Testcontainers，跑完由 Ryuk 回收；首次会拉镜像，约 600MB） |
 | ③ | 没配，也没有 Docker | H2 的 MySQL 兼容模式快速通道（同一份 Flyway 迁移；日志会 WARN 说明引擎不是 MySQL） |
 
 ```bash
-./mvnw verify                          # 默认：三级自动置备，跑全部 69 个用例
+./mvnw verify                          # 默认：三级自动置备，跑全部 89 个用例
 ./mvnw clean verify -Pcoverage-check   # 再加"全局行覆盖 ≥ 80%"的门槛
 # 想连你自己的库（只指向本地或你专属的库——Flyway 会在它上面建表 / 迁移）：
-MALL_DB_USERNAME=klaus MALL_DB_PASSWORD='<密码>' ./mvnw clean verify -Pcoverage-check
+APP_DB_USERNAME=klaus APP_DB_PASSWORD='<密码>' ./mvnw clean verify -Pcoverage-check
 ./mvnw clean verify -Pcoverage-check -Dspring.profiles.active=local
 # 覆盖率报告：target/site/jacoco/index.html
 ```
@@ -93,20 +105,40 @@ MALL_DB_USERNAME=klaus MALL_DB_PASSWORD='<密码>' ./mvnw clean verify -Pcoverag
 | `MapperStatementsTest` | Mapper 接口方法与 XML statement 一一对应（不需要 DB） |
 | `EntityMappingTest` | 实体字段 ↔ resultMap / INSERT / UPDATE ↔ 建表列 对账（不需要 DB） |
 | `ApplicationContextTest` | Bean 装配 + Mapper XML 解析（不需要 DB） |
-| 各 `*Test` 单测 | Spec / Policy / 密码哈希 / 分页 / 上下文 / 地址归属等 |
-| `MapperSmokeTest`、`*ApiTest` | 真库 SQL 与 HTTP 端到端（默认就跑：显式配置 → Docker 容器 → H2 兜底） |
+| 各 `*Test` 单测 | Spec / Policy / 密码哈希 / 令牌签名 / 令牌 Cookie 属性 / 分页 / 上下文 / 地址归属等 |
+| `MapperSmokeTest`、`*ApiTest` | 真库 SQL 与 HTTP 端到端（登录换令牌、Bearer 与 Cookie 两条路、地址增删改查；默认就跑：显式配置 → Docker 容器 → H2 兜底） |
 
 ## 接口一览
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
 | POST | `/user/create` | 注册，响应回显赠送积分 |
-| GET | `/user/get` | 当前用户 |
-| POST | `/address/create`、`/address/update`、`/address/remove` | 地址增删改 |
-| GET | `/address/page` | 地址分页 |
+| POST | `/user/login` | 登录，返回令牌并下发 HttpOnly Cookie（手机号 + 密码） |
+| POST | `/user/logout` | 退出，清掉令牌 Cookie |
+| GET | `/user/get` | 当前用户（需要身份） |
+| POST | `/address/create`、`/address/update`、`/address/remove` | 地址增删改（需要身份） |
+| GET | `/address/page` | 地址分页（需要身份） |
 
 约定：只用 GET/POST；路径 camelCase；分页参数固定 `curPage`（从 1 开始）/ `pageSize`（默认 10）；
+需要身份的接口带两种凭证之一（同时带时**以 `Authorization` 为准**）：`Authorization: Bearer <token>`（App /
+服务间调用）或登录下发的 HttpOnly Cookie（浏览器）；两者都没有或都非法则返回 `code=40005` 未登录；
 统一响应 `{code, message, data}`，`code=0` 为成功，失败靠业务错误码区分（HTTP 状态恒为 200）。
+
+## 鉴权
+
+- **令牌**：`POST /user/login` 用手机号 + 密码换取 HMAC-SHA256 自签令牌（有效期 `app.auth.token-ttl`，
+  默认 7 天），签名密钥来自 `app.auth.token-secret`——默认值只是样例替身，生产必须注入
+  `APP_AUTH_TOKEN_SECRET`（未配置则登录直接失败）。配置项一律挂在固定的 `app.*` 前缀下，不随项目改名。
+- **两种载体**：`Authorization: Bearer <token>` 给 App / 开放 API；HttpOnly Cookie 给浏览器 / 后台
+  （`HttpOnly` 让 JS 读不到、`SameSite=Lax` 挡住跨站 POST、`Max-Age` 与令牌 TTL 一致）。HTTPS 环境把
+  `app.auth.cookie-secure` 打开，否则浏览器不会回传。Cookie 名默认 `app_token`（`app.auth.cookie-name`）
+  ——Cookie 不区分端口，同域下跑多个项目时改成各自的名字，免得互相顶掉。实现见
+  `web/auth/OperatorCredentialResolver` 的两个实现类，要再加载体（比如 session id）加一个实现即可，
+  `domain` / `application` 不用动。
+- **CSRF**：`SameSite=Lax` 已让跨站 POST 不带 Cookie，而本仓库写操作一律 POST，所以没再引 CSRF 令牌；
+  后台与其它业务**共享子域**（同 site、不同 origin）时 Lax 挡不住，那时要加 double-submit CSRF token。
+- **吊销**：自签令牌签发后在过期前**无法作废**——`/user/logout` 只是让浏览器丢掉 Cookie。需要"强制下线 /
+  改密即失效 / 单点登录"时必须改成服务端会话（Redis 或会话表），把 `TokenCodec` 换掉即可。
 
 ## 规范入口
 
@@ -118,7 +150,7 @@ MALL_DB_USERNAME=klaus MALL_DB_PASSWORD='<密码>' ./mvnw clean verify -Pcoverag
 
 ## 样例替身清单
 
-验证码、鉴权、消息队列、积分、密码哈希这几处都是**有意为之的替身**（不是遗漏），
+验证码、鉴权（登录令牌）、消息队列、积分、密码哈希这几处都是**有意为之的替身**（不是遗漏），
 它们在 [TEMPLATE.md](TEMPLATE.md) 的"样例替身清单"里逐条列了真实项目该怎么替换。
 
 ## 目录结构
