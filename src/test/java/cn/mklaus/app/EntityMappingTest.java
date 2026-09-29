@@ -25,15 +25,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * 实体字段 ↔ resultMap / INSERT / UPDATE ↔ 建表列 对账（不需要数据库）。
  *
  * <p>
- * 这几处是**手工同步**的，漏一处的后果实测分三种：{@code User} 这类有无参构造器的实体会被 MyBatis
- * 静默忽略（值不落库、也查不出来）；{@code Address} 这类只有全参构造器的会抛
- * {@code Constructor auto-mapping ... failed}（报错和真因完全不搭）；XML 用了建表语句里不存在的列，
- * 则要跑到那条 SQL 才炸。
+ * 这几处手工同步，漏一处的后果实测分三种：有无参构造器的实体会被 MyBatis 静默忽略（值不落库也查不出来）；
+ * 只有全参构造器的会抛 {@code Constructor auto-mapping ... failed}（报错和真因完全不搭）；
+ * XML 用了建表语句里不存在的列则要跑到 SQL 才炸。
  *
  * <p>
  * 与 {@link MapperStatementsTest} 分工：那个查"接口方法 ↔ XML statement"，这个查"实体 ↔ 列"。
- * 两者都从仓库里的真实文件解析，新增实体 / mapper / 迁移脚本会自动纳入，不需要维护清单。
- * 已知简化：建表语句按"一行一列"解析。
+ * 建表语句按"一行一列"解析（已知简化）。
  *
  * @author klaus
  * @since 2026/9/29
@@ -124,10 +122,7 @@ class EntityMappingTest {
         assertTrue(problems.isEmpty(), () -> String.join("\n", problems));
     }
 
-    /**
-     * 实体必须用显式 resultMap 映射。项目没开 {@code map-underscore-to-camel-case}，用 {@code resultType}
-     * 会让 {@code user_id} 这类列静默映射不上，而且本类的前两张对账会因为找不到 resultMap 而整条失效。
-     */
+    /** 必须用显式 resultMap：项目没开 map-underscore-to-camel-case，{@code resultType} 会让下划线列静默丢，对账也会失效。 */
     @Test
     void mappersShouldUseExplicitResultMapInsteadOfResultType() throws Exception {
         List<String> problems = new ArrayList<>();
@@ -142,8 +137,8 @@ class EntityMappingTest {
     }
 
     /**
-     * 实体字段必须既能存进去（INSERT）也能改到（UPDATE）。实测过的坑：字段留在 resultMap / INSERT 里、
-     * 只从 UPDATE 的 SET 列表删掉，则本类其它对账和真库测试全都通过——字段静默改不动。
+     * 实体字段必须既能存进去（INSERT）也能改到（UPDATE）：只从 UPDATE 的 SET 删掉时，
+     * 其它对账与真库测试全都会通过——字段静默改不动。
      */
     @Test
     void writeStatementsShouldCoverMappedColumns() throws Exception {

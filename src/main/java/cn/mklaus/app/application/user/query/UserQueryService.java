@@ -1,8 +1,5 @@
 package cn.mklaus.app.application.user.query;
 
-import cn.mklaus.app.application.user.query.request.AddressPageRequest;
-import cn.mklaus.app.application.user.query.response.AddressInfo;
-import cn.mklaus.app.application.user.query.response.UserInfo;
 import cn.mklaus.app.common.auth.Context;
 import cn.mklaus.app.common.auth.Operator;
 import cn.mklaus.app.common.exception.ErrorCodeException;

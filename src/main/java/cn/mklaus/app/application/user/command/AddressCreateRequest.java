@@ -1,4 +1,4 @@
-package cn.mklaus.app.application.user.command.request;
+package cn.mklaus.app.application.user.command;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;

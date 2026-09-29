@@ -126,8 +126,11 @@ class ArchitectureTest {
 
     @Test
     void requestDtosShouldNotUseForbiddenPagingParameterNames() {
+        // 按"整个 application 层"匹配，而不是某个叶子包：以前写成 ..application..request..，
+        // 一旦请求对象换了包（比如扁平化掉 request 包），这条规则会**静默不再覆盖任何类**，
+        // 看着还在、其实已经失效。
         ArchRule rule = noFields()
-            .that().areDeclaredInClassesThat().resideInAPackage("..application..request..")
+            .that().areDeclaredInClassesThat().resideInAPackage(tree("application"))
             .should().haveNameMatching(FORBIDDEN_PAGING_PARAMETER_NAMES)
             .because("对外分页参数只有 curPage / pageSize，禁止 limit / offset 及其它历史命名（见 CLAUDE.md）");
         rule.check(CLASSES);

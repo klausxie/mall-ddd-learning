@@ -24,13 +24,12 @@ src/main/java/cn/mklaus/app/
 │   └── <业务>/
 │       ├── command/                  写操作（增删改）
 │       │   ├── XxxCmdService.java            @Service + @Transactional，只编排
-│       │   ├── assembler/                    请求对象 → 领域对象
-│       │   ├── request/                      写操作请求 DTO
-│       │   └── response/                     写操作响应模型（如注册结果）
+│       │   ├── XxxRequest.java               写操作请求 DTO（与 Service 同包）
+│       │   └── XxxResponse.java              写操作响应模型（如注册结果）
 │       └── query/                    读操作
 │           ├── XxxQueryService.java
-│           ├── request/                      查询请求 DTO
-│           └── response/                     响应模型 XxxInfo（领域实体不直接出接口）
+│           ├── XxxPageRequest.java           查询请求 DTO（与 Service 同包）
+│           └── XxxInfo.java                  响应模型（record；领域实体不直接出接口）
 │
 ├── domain/                       【核心层】业务规则与领域模型，不感知框架与存储
 │   ├── common/                               跨业务能力接口（验证码 / 事件 / 密码哈希）
@@ -66,14 +65,14 @@ src/main/java/cn/mklaus/app/
 POST /address/create
 └─ web/AddressController.createAddress              只转发；@Valid 管请求体格式
    └─ application/user/command/UserCmdService   编排 + 事务边界（@Transactional 在类上）
-      ├─ .../command/assembler/UserAssembler        request → 领域对象（不做业务判断）
+      ├─ UserCmdService#buildAddress()              request → 领域对象（私有方法，不做业务判断）
       ├─ domain/user/Address.validate()             实体不变量：永远成立的那些
       │  └─ common/exception/Asserts.state()        不满足就抛 ErrorCodeException（自带业务错误码）
       └─ domain/user/AddressMapper.saveAddress()    只声明接口，SQL 在 resources/mapper/*.xml
          └─ db/migration/V1__init_schema.sql        表结构；列必须与 resultMap 一一对应
 ```
 
-读接口走 `UserQueryService` + `.../query/response/AddressInfo`（响应模型不出领域实体）；
+读接口走 `UserQueryService` + `.../query/AddressInfo`（响应模型不出领域实体）；
 失败出口统一在 `configuration/GlobalExceptionHandler`（HTTP 状态恒 200，靠 body.code 区分）。
 
 按这条线找不到某条规则时，按"规则种类"对号入座：实体不变量 → 实体自身的 `validate()`；
@@ -86,9 +85,9 @@ POST /address/create
 |---|---|---|
 | HTTP 接口 | `web/XxxController` | application / domain |
 | 一个业务用例的编排 | `application/<业务>/command` 或 `query` | domain |
-| 请求参数对象 | `application/<业务>/{command,query}/request` | domain |
-| 响应模型（出参） | `application/<业务>/{command,query}/response/XxxInfo` | 直接把领域实体当响应体 |
-| 请求对象 → 领域对象的转换 | `application/<业务>/command/assembler` | 实体内部 |
+| 请求参数对象 | `application/<业务>/{command,query}`（与 Service 同包） | domain |
+| 响应模型（出参） | `application/<业务>/{command,query}/XxxInfo`（用 record） | 直接把领域实体当响应体 |
+| 请求对象 → 领域对象的转换 | 需要容器协作者 → Service 的私有方法；纯字段映射 → 模型上的 `of()` | 实体内部、独立 assembler 类 |
 | 永远成立的实体不变量 | 该实体的 `validate()` | Spec（会被无关用例误用） |
 | 按用例生效、可复用的业务约束 | `domain/<业务>/spec/XxxSpec` | 实体方法 / Controller |
 | 条件 → 数值的业务策略（积分 / 运费 / 折扣） | `domain/<业务>/<能力>/XxxPolicy` | 硬编码在 application |
@@ -106,8 +105,8 @@ POST /address/create
 
 以"新增收货地址"为例，仓库里有可对照的完整实现：
 
-1. `application/<业务>/command/request/XxxRequest.java` —— 请求 DTO（`@Data` + 校验注解）
-2. `application/<业务>/{command,query}/response/XxxInfo.java` —— 响应模型，**不要把领域实体直接返回**
+1. `application/<业务>/{command,query}/XxxRequest.java` —— 请求 DTO（`@Data` + 校验注解）
+2. `application/<业务>/{command,query}/XxxInfo.java` —— 响应模型（record），**不要把领域实体直接返回**
 3. 在 `application/<业务>/.../XxxCmdService` 加方法，**只编排**（只有一个实现时不拆接口/实现）
 4. 业务规则写进实体方法（`validate()` / `assertOwnedBy()`）、`XxxValidator`、`XxxSpec`（是不是）或 `XxxPolicy`（是多少）
 5. `web/XxxController` 加 `@PostMapping("create")`，返回 `Response<XxxInfo>`
@@ -154,7 +153,7 @@ web ──────────► application ──────────
 | 顶层包之间不得有循环依赖 | 分层失效的早期信号 |
 | `*Mapper` 必须是接口 | 实现由 MyBatis 生成 |
 | 实现 `Spec` 的类必须以 `Spec` 结尾且位于 `..spec..` 包 | 规格统一命名与位置 |
-| `web` 不得依赖 `domain` | 领域实体不出接口，返回数据用 `application/.../response` 的响应模型 |
+| `web` 不得依赖 `domain` | 领域实体不出接口，返回数据用 `application/<业务>/...` 里的响应模型 |
 | `@RestController` 必须在 `web` 包 | HTTP 入口集中管理 |
 | `application` + `web` 不得使用 `Assert` / `Asserts` | 断言属于领域校验：编排层只能调 domain 的 Validator / Spec / 实体方法，报错就抛 `ErrorCodeException` |
 | request 对象不得出现 `limit` / `offset` / 历史分页名 | 对外分页参数只有 `curPage` / `pageSize` |

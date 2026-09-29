@@ -1,4 +1,4 @@
-package cn.mklaus.app.application.user.query.request;
+package cn.mklaus.app.application.user.query;
 
 import cn.mklaus.app.common.model.Pageable;
 import cn.mklaus.app.domain.user.query.AddressPageCondition;

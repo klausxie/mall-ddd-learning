@@ -29,7 +29,7 @@
 - 禁止 `System.out` / `System.err` / `e.printStackTrace()` / `@Autowired` 字段注入 / 通配符导入 / `new Date()`
 - 断言（`Assert` / `Asserts`）只允许出现在 `domain`：`application` / `web` 只能调用 domain 的
   Validator、Spec 或实体方法，需要报错就抛 `ErrorCodeException`
-- 领域实体不要直接当接口响应体，响应模型放 `application/<业务>/{command,query}/response`
+- 领域实体不要直接当接口响应体，响应模型（record）放 `application/<业务>/{command,query}`，与 Service 同包
 
 ## 分层（由 ArchUnit 强制）
 

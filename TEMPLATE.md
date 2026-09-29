@@ -59,7 +59,7 @@ git clone <模板仓库> order-service && cd order-service
 | 类别 | 内容 | 新项目怎么办 |
 |---|---|---|
 | **骨架（保留）** | `common/`（错误码 / Response / Page / Spec / Violation）、分层结构、12 条 ArchUnit 规则、Checkstyle + Spotless、CI（MySQL service + 覆盖率门槛）、compose + schema、四份文档 | 全部保留 |
-| **黄金切片（照抄）** | `user` 域：Controller → Cmd/QueryService → assembler → 实体/Validator/Spec/Policy → Mapper + XML → 真库测试 | 大多数项目都有"用户/账号"，可改名复用；不适合就先照它写自己的第一个域，再删掉它 |
+| **黄金切片（照抄）** | `user` 域：Controller → Cmd/QueryService → 实体/Validator/Spec/Policy → Mapper + XML → 真库测试 | 大多数项目都有"用户/账号"，可改名复用；不适合就先照它写自己的第一个域，再删掉它 |
 | **待你新增** | 你自己的业务域（一个域 = 一个 `domain/<业务>` + `application/<业务>` + 入口 + 表 + 测试） | 照黄金切片的形状加；加第二个域时，`ArchitectureTest` 里的上下文边界规则会开始生效 |
 
 ## 五、配合 AI 的用法
@@ -74,7 +74,7 @@ git clone <模板仓库> order-service && cd order-service
 
 按仓库规范落地（先读 CLAUDE.md / ARCHITECTURE.md，新建接口要动哪几处见 ARCHITECTURE §二）：
 1. 规则先写进 domain：实体不变量 / XxxValidator / XxxSpec / XxxPolicy，并补单测
-2. 再补 application：request / response + assembler + Cmd|QueryService（只编排，不写规则）
+2. 再补 application：XxxRequest / XxxInfo（record）+ Cmd|QueryService（只编排，不写规则）
 3. 最后补 web Controller：只用 GET/POST、路径 camelCase、返回 Response<T> 和响应模型
 4. 要落库就同时改 Mapper 接口 + XML + schema（三者必须一致）
 5. 断言只能出现在 domain；响应不得直接返回领域实体；失败一律带业务错误码

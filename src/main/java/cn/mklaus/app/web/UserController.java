@@ -1,10 +1,10 @@
 package cn.mklaus.app.web;
 
 import cn.mklaus.app.application.user.command.UserCmdService;
-import cn.mklaus.app.application.user.command.request.UserCreateRequest;
-import cn.mklaus.app.application.user.command.response.UserCreateResponse;
+import cn.mklaus.app.application.user.command.UserCreateRequest;
+import cn.mklaus.app.application.user.command.UserCreateResponse;
+import cn.mklaus.app.application.user.query.UserInfo;
 import cn.mklaus.app.application.user.query.UserQueryService;
-import cn.mklaus.app.application.user.query.response.UserInfo;
 import cn.mklaus.app.common.model.Response;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;

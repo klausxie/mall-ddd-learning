@@ -1,12 +1,12 @@
 package cn.mklaus.app.web;
 
+import cn.mklaus.app.application.user.command.AddressCreateRequest;
+import cn.mklaus.app.application.user.command.AddressRemoveRequest;
+import cn.mklaus.app.application.user.command.AddressUpdateRequest;
 import cn.mklaus.app.application.user.command.UserCmdService;
-import cn.mklaus.app.application.user.command.request.AddressCreateRequest;
-import cn.mklaus.app.application.user.command.request.AddressRemoveRequest;
-import cn.mklaus.app.application.user.command.request.AddressUpdateRequest;
+import cn.mklaus.app.application.user.query.AddressInfo;
+import cn.mklaus.app.application.user.query.AddressPageRequest;
 import cn.mklaus.app.application.user.query.UserQueryService;
-import cn.mklaus.app.application.user.query.request.AddressPageRequest;
-import cn.mklaus.app.application.user.query.response.AddressInfo;
 import cn.mklaus.app.common.model.Page;
 import cn.mklaus.app.common.model.Response;
 import jakarta.validation.Valid;
