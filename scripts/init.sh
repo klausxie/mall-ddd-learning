@@ -162,6 +162,12 @@ find backend/src -type d -empty -delete 2>/dev/null || true
 info "7/7 自检：确认没有旧标识残留"
 # 这一步是给"改名靠记忆必漏"兜底的：漏了就报错，而不是等编译/运行时才发现。
 # 排除脚本自己（它的常量里当然有旧标识）。
+# 前端项目名也要改到：package.json 里若还留着 <旧 artifactId>-frontend，说明第 5 步没生效
+if [ -f frontend/package.json ] && grep -q "\"name\": \"${OLD_ARTIFACT}-frontend\"" frontend/package.json; then
+    printf '\033[31mfrontend/package.json 的项目名仍是 %s-frontend，第 5 步没生效\033[0m\n' "$OLD_ARTIFACT" >&2
+    exit 1
+fi
+
 LEFTOVERS="$(git ls-files | grep -v '^scripts/init.sh$' | xargs grep -lI \
     -e "$OLD_BASE" -e "$OLD_PATH" -e "$OLD_GROUP" 2>/dev/null || true)"
 if [ -n "$LEFTOVERS" ]; then
@@ -181,8 +187,8 @@ cat <<EOF
 
 初始化完成。接下来：
 
-  1. ./mvnw spotless:apply && ./mvnw clean verify     # 骨架必须是绿的
-  2. docker compose up -d && export APP_DB_PASSWORD=klaus
+  1. make verify                                      # 两端骨架必须都是绿的（后端自动置备真库：Docker 容器或 H2）
+  2. make db-up && export APP_DB_USERNAME=klaus APP_DB_PASSWORD=klaus   # 可选：连你自己的库
   3. 读 TEMPLATE.md 的"初始化后清单"，删掉用不上的样例并确认替身配置
   4. $([ "$RESET_GIT" -eq 1 ] && echo "git commit -m 'chore: 从模板初始化'" || echo "确认无误后提交")
 

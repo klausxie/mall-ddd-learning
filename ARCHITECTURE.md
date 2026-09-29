@@ -149,7 +149,7 @@ POST /address/create
    + `db/migration/V2__xxx.sql`。三处对不上会被 `MapperStatementsTest` / `EntityMappingTest` 拦下
 7. 分页接口才需要 `Pageable` / `Page`
 8. 补测试：领域规则写单测（有 domain 覆盖率地板兜底）；端到端写 `*ApiTest`（真库、`@Transactional` 回滚）
-9. 跑 `./mvnw verify`
+9. 跑 `make verify-backend`
 
 ### 规格（Specification）怎么用
 
@@ -267,4 +267,4 @@ web ──────────► application ──────────
 1. 先改本文（目录树 / 决策表 / 分层规则）。
 2. 同步更新 `ArchitectureTest`。
 3. 再动代码。
-4. `./mvnw verify` 必须全绿。
+4. `make verify-backend` 必须全绿（两端都改了就跑 `make verify`）。
